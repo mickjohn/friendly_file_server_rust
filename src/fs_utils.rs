@@ -1,25 +1,38 @@
 use std::path::{Path, PathBuf};
+use std::fs;
 use serde::Serialize;
+use chrono::DateTime;
+use chrono::offset::Utc;
 
 
 pub struct ServePoint {
     root_path: PathBuf,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct DirectoryListing {
-    path: String,
-    trail: Vec<(String, String)>,
-    children: Vec<DirectoryEntry>,
+    pub path: String,
+    pub trail: Vec<(String, String)>,
+    pub children: Vec<DirectoryEntry>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
 pub struct DirectoryEntry {
-    name: String,
-    is_file: bool,
-    is_dir: bool,
-    mtime: String,
-    size: String,
+    pub name: String,
+    pub is_file: bool,
+    pub is_dir: bool,
+    pub mtime: String,
+    pub size: String,
+}
+
+fn to_uri_path(p: &Path) -> String {
+    let mut uri_path = String::from("/");
+    for part in p.iter() {
+        let s = part.to_str().unwrap();
+        uri_path.push_str(s);
+        uri_path.push('/');
+    }
+    uri_path
 }
 
 impl ServePoint {
@@ -44,7 +57,11 @@ impl ServePoint {
     is done by using the 'starts_with' function to ensure that the path starts with the root dir
     */
     fn is_subdir(&self, p: &Path) -> bool {
-        let complete_path: PathBuf = [&self.root_path, p].iter().collect();
+        if p == Path::new("") || p == Path::new("/") {
+            return true
+        }
+
+        let complete_path: PathBuf = self.root_path.join(p);
         if complete_path == self.root_path {
             return false;
         }
@@ -55,7 +72,7 @@ impl ServePoint {
         }
     }
 
-    fn is_file(&self, p: &Path) -> bool {
+    pub fn is_file(&self, p: &Path) -> bool {
         if !self.is_subdir(p) {
             return false
         }
@@ -104,6 +121,58 @@ impl ServePoint {
         if !complete_path.exists() { return None; }
         Some(complete_path)
     }
+
+    pub fn get_directory_listing(&self, p: &Path) -> Option<DirectoryListing> {
+        if !self.is_subdir(p) { return None; }
+
+        // If the path is empty then don't bother appending it to the root
+        let complete_path: PathBuf = if p == Path::new("") || p == Path::new("/") {
+            [&self.root_path].iter().collect()
+        } else {
+            [&self.root_path, p].iter().collect()
+        };
+
+        if !complete_path.exists() { return None; }
+        if !complete_path.is_dir() { return None; }
+
+        let mut dirlisting = DirectoryListing{
+            path: to_uri_path(p),
+            trail: self.create_trail(p),
+            children: Vec::new(),
+        };
+
+        for entry in fs::read_dir(complete_path).unwrap() {
+            let entry = entry.unwrap();
+            let path: PathBuf = entry.path();
+            let meta = path.metadata().unwrap();
+            let mtime_sys = meta.accessed().unwrap();
+            let mtime_chrono: DateTime<Utc> = mtime_sys.into();
+
+            let size = if path.is_dir() {
+                "-"
+            } else {
+                "1 GB"
+            };
+
+            let name: String = if path.is_dir() {
+                let mut temp = path.file_name().unwrap().to_str().unwrap().to_owned();
+                temp.push('/');
+                temp
+            } else {
+                path.file_name().unwrap().to_str().unwrap().to_owned() 
+            };
+
+            let dir_entry = DirectoryEntry {
+                name: name,
+                is_file: path.is_file(),
+                is_dir: path.is_dir(),
+                mtime: format!("{}", mtime_chrono.format("%d/%m/%Y %T")),
+                size: size.to_owned(),
+            };
+            dirlisting.children.push(dir_entry)
+        }
+        Some(dirlisting)
+    }
 }
 
 #[cfg(test)]
@@ -135,7 +204,9 @@ mod tests {
         let sp = ServePoint::new(root);
         assert!(sp.is_subdir(Path::new("file1.abc")));
         assert!(sp.is_subdir(Path::new("folder1")));
-        assert!(sp.is_subdir(&Path::new("folder1").join(Path::new("file3.abc"))));
+        assert!(sp.is_subdir(&Path::new("folder1").join("file3.abc")));
+        assert!(sp.is_subdir(Path::new("")));
+        assert!(sp.is_subdir(Path::new("/")));
 
 
         let bad_folder: PathBuf = ["folder1", ".."].iter().collect();
@@ -190,4 +261,13 @@ mod tests {
         assert_eq!(sp.get_full_path(&doesnt_exist), None);
     }
 
+    #[test]
+    fn test_get_directory_listing() {
+        let root = PathBuf::from("test/testfolder");
+        let sp = ServePoint::new(root);
+        let path1 = Path::new("");
+        let listing1 = sp.get_directory_listing(path1);
+        println!("{:?}", listing1);
+        // assert!(false);
+    }
 }
