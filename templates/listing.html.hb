@@ -16,7 +16,7 @@
       Index of <a href="/browse">root /</a>
 
       {{#each listing.trail }}
-      <a href="/browse/{{ this.[0] }}">
+      <a href="/browse/{{ urlencode this.[0] }}">
         {{ this.[1] }} /
       </a>
       {{/each}}
@@ -34,13 +34,13 @@
 
       <tr>
         {{#if child.is_dir }}
-        <td align="center"> <img src="/static/icons/folder_icon.png" alt="icon" height="20"> </td>
+        <td align="center"> <img src="/static/icons/folder_icon.svg" alt="icon" height="35"> </td>
         {{ else }}
-        <td align="center"> <img src="/static/icons/{{ child.name }}" alt="icon" height="45"> </td>
+        <td align="center"> <img src="/static/icons/{{ icon_for_ext child.name }}" alt="icon" height="35"> </td>
         {{/if }}
 
         <td>
-          <a href="/browse{{@root.listing.path}}{{child.name}}">
+          <a href="/browse{{@root.listing.path}}{{urlencode child.name}}">
             {{ child.name }}
           </a>
 

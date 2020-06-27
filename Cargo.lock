@@ -1404,10 +1404,12 @@ dependencies = [
  "chrono",
  "futures",
  "handlebars",
+ "lazy_static",
  "pretty_env_logger",
  "serde",
  "serde_json",
  "tokio",
+ "url",
  "warp",
 ]
 
