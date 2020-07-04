@@ -40,9 +40,15 @@
         {{/if }}
 
         <td>
+          {{#if child.is_dir }}
           <a href="/browse{{@root.listing.path}}{{urlencode child.name}}">
             {{ child.name }}
           </a>
+          {{ else }}
+          <a href="/browse{{@root.listing.path}}{{child.name}}">
+            {{ child.name }}
+          </a>
+          {{/if}}
 
           {{#if (is_mp4 child.name) }}
           <a class="cinema" href="/browse{{@root.listing.path}}{{ child.name}}?cinema=1">

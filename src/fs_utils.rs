@@ -115,7 +115,7 @@ impl ServePoint {
     /*
     Given a relative path, return the full path including the root
     */
-    fn get_full_path(&self, p: &Path) -> Option<PathBuf> {
+    pub fn get_full_path(&self, p: &Path) -> Option<PathBuf> {
         if !self.is_subdir(p) { return None; }
         let complete_path: PathBuf = [&self.root_path, p].iter().collect();
         if !complete_path.exists() { return None; }
