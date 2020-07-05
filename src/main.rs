@@ -1,9 +1,12 @@
+use std::error::Error;
 use std::env;
-use warp::Filter;
 use std::path::PathBuf;
+use warp::Filter;
 use url::form_urlencoded::parse;
 use warp::http::header::{HeaderMap, HeaderValue};
-use std::error::Error;
+use warp::http::Uri;
+use argon2::{self, Config};
+use rand::Rng;
 
 #[macro_use]
 extern crate lazy_static;
@@ -11,44 +14,56 @@ extern crate lazy_static;
 mod fs_utils;
 mod hb_helpers;
 mod args;
-use bcrypt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
 
     if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "info");
+        env::set_var("RUST_LOG", "debug");
     }
     pretty_env_logger::init();
 
+
     let config = args::parse_config_from_args()?;
+    let root_path = PathBuf::from(&config.sharedir);
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Disposition", HeaderValue::from_static("attachement"));
 
-    let root_path = PathBuf::from(r"D:\Downloads");
-    let sp = models::new_server_point(root_path);
+    let sp = models::new_server_point(root_path.clone());
     let hba = models::new_handlebars_arc();
 
     let api = filters::create_listing(sp, hba);
     let static_files = warp::path("static").and(warp::fs::dir("static"));
     let files = warp::path("browse")
-                    .and(warp::fs::dir(r"D:\Downloads"))
+                    .and(warp::fs::dir(root_path))
                     .with(warp::reply::with::headers(headers));
+    let redirect = warp::any().map(|| warp::redirect(Uri::from_static("/browse/")));
 
     // View access logs by setting `RUST_LOG=todos`.
     let routes = api
                    .or(files)
-                   .or(static_files);
+                   .or(static_files)
+                   .or(redirect);
 
     // Start up the server...
     warp::serve(routes).run((config.ipaddr, config.webport)).await;
     Ok(())
 }
 
+pub fn hash(password: &[u8]) -> String {
+    let salt = rand::thread_rng().gen::<[u8; 32]>();
+    let config = Config::default();
+    argon2::hash_encoded(password, &salt, &config).unwrap()
+}
+
+pub fn verify(hash: &str, password: &[u8]) -> bool {
+    argon2::verify_encoded(hash, password).unwrap_or(false)
+}
+
 mod filters {
     use super::handlers;
-    use super::models::{Sp, Hba};
+    use super::models::{Sp, Hba, UserMap};
     use warp::Filter;
 
     pub fn create_listing<'a>(
@@ -69,6 +84,10 @@ mod filters {
 
     fn with_hba(hba: Hba) -> impl Filter<Extract = (Hba,), Error = std::convert::Infallible> + Clone {
         warp::any().map(move || hba.clone())
+    }
+
+    fn with_users_map(users: UserMap) -> impl Filter<Extract = (UserMap,), Error = std::convert::Infallible> + Clone {
+        warp::any().map(move || users.clone())
     }
 
     // async fn with_existing_file(sp: Sp) -> impl Filter<Extract = (PathBuf,), Error = warp::Rejection> + Clone {
@@ -119,6 +138,7 @@ mod handlers {
 
 mod models {
     use std::sync::Arc;
+    use std::collections::HashMap;
     use tokio::sync::Mutex;
     use super::fs_utils::ServePoint;
     use std::path::PathBuf;
@@ -127,6 +147,7 @@ mod models {
     use crate::hb_helpers;
 
     pub type Sp = Arc<Mutex<ServePoint>>;
+    pub type UserMap = Arc<Mutex<HashMap<String, String>>>;
 
     #[derive(Clone)]
     pub struct Hba<'a> {
@@ -135,6 +156,10 @@ mod models {
 
     pub fn new_server_point(path: PathBuf) -> Sp {
         Arc::new(Mutex::new(ServePoint::new(path)))
+    }
+
+    pub fn new_users(users: HashMap<String, String>) -> UserMap {
+        Arc::new(Mutex::new(users))
     }
 
     pub fn new_handlebars_arc<'a>() -> Hba<'a> {
