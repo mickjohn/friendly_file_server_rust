@@ -106,8 +106,8 @@ fn load_users_from_str(contents: &str) -> Result<HashMap<String, String>, String
                 return Err(String::from("Error reading credentials file."));
             }
 
-            let username = parts[0].to_owned();
-            let password = parts[1].to_owned();
+            let username = parts[0].trim().to_owned();
+            let password = parts[1].trim().to_owned();
             users.insert(username, password);
         }
     }
