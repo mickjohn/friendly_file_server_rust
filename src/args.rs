@@ -100,6 +100,7 @@ fn validate_ip_addr(ipaddr: &str) -> Result<[u8; 4], String> {
 fn load_users_from_str(contents: &str) -> Result<HashMap<String, String>, String> {
     let mut users = HashMap::new();
     for line in contents.split("\n") {
+        let line = line.trim();
         if !line.starts_with(";") && line != "" {
             let parts: Vec<&str> = line.split(" ").collect();
             if parts.len() != 2 {

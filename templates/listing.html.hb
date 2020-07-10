@@ -51,7 +51,7 @@
           {{/if}}
 
           {{#if (is_mp4 child.name) }}
-          <a class="cinema" href="/browse{{@root.listing.path}}{{ child.name}}?cinema=1">
+          <a class="cinema" href="/cinema{{@root.listing.path}}{{ child.name}}?cinema=1">
             (click here to stream)
           </a>
           {{/if }}

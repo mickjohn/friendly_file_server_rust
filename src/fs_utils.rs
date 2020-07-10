@@ -115,12 +115,12 @@ impl ServePoint {
     /*
     Given a relative path, return the full path including the root
     */
-    pub fn get_full_path(&self, p: &Path) -> Option<PathBuf> {
-        if !self.is_subdir(p) { return None; }
-        let complete_path: PathBuf = [&self.root_path, p].iter().collect();
-        if !complete_path.exists() { return None; }
-        Some(complete_path)
-    }
+    // pub fn get_full_path(&self, p: &Path) -> Option<PathBuf> {
+    //     if !self.is_subdir(p) { return None; }
+    //     let complete_path: PathBuf = [&self.root_path, p].iter().collect();
+    //     if !complete_path.exists() { return None; }
+    //     Some(complete_path)
+    // }
 
     pub fn get_directory_listing(&self, p: &Path) -> Option<DirectoryListing> {
         if !self.is_subdir(p) { return None; }
@@ -241,25 +241,25 @@ mod tests {
         assert_eq!(expected_trail, trail);
     }
 
-    #[test]
-    fn test_get_full_path() {
-        let root = PathBuf::from("test/testfolder");
-        let sp = ServePoint::new(root);
+    // #[test]
+    // fn test_get_full_path() {
+    //     let root = PathBuf::from("test/testfolder");
+    //     let sp = ServePoint::new(root);
 
-        let path1 = Path::new("file1.abc");
-        let expected1: PathBuf = ["test", "testfolder", "file1.abc"].iter().collect();
-        assert_eq!(sp.get_full_path(path1).unwrap(), expected1.canonicalize().unwrap());
+    //     let path1 = Path::new("file1.abc");
+    //     let expected1: PathBuf = ["test", "testfolder", "file1.abc"].iter().collect();
+    //     assert_eq!(sp.get_full_path(path1).unwrap(), expected1.canonicalize().unwrap());
 
-        let path2 = Path::new("folder1").join("mytestfiles").join("testfile1.txt");
-        let expected2: PathBuf = ["test", "testfolder", "folder1", "mytestfiles", "testfile1.txt"].iter().collect();
-        assert_eq!(sp.get_full_path(&path2).unwrap(), expected2.canonicalize().unwrap());
+    //     let path2 = Path::new("folder1").join("mytestfiles").join("testfile1.txt");
+    //     let expected2: PathBuf = ["test", "testfolder", "folder1", "mytestfiles", "testfile1.txt"].iter().collect();
+    //     assert_eq!(sp.get_full_path(&path2).unwrap(), expected2.canonicalize().unwrap());
 
-        let bad_path = Path::new("folder1").join("..").join("..");
-        assert_eq!(sp.get_full_path(&bad_path), None);
+    //     let bad_path = Path::new("folder1").join("..").join("..");
+    //     assert_eq!(sp.get_full_path(&bad_path), None);
 
-        let doesnt_exist = Path::new("folder1").join("woooooooo");
-        assert_eq!(sp.get_full_path(&doesnt_exist), None);
-    }
+    //     let doesnt_exist = Path::new("folder1").join("woooooooo");
+    //     assert_eq!(sp.get_full_path(&doesnt_exist), None);
+    // }
 
     #[test]
     fn test_get_directory_listing() {

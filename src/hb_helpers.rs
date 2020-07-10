@@ -24,6 +24,7 @@ lazy_static! {
 }
 
 pub const LISTING_TEMPLATE: &'static str = include_str!("../templates/listing.html.hb");
+pub const CINEMA_TEMPLATE: &'static str = include_str!("../templates/cinema.html.hb");
 
 /*
 If given a json string that ends in ".mp4" reutrn true
