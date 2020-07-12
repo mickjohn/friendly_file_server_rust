@@ -1,9 +1,8 @@
 use crate::verify;
 use super::handlers;
 use super::rejections;
-use super::models::{Sp, Hba, UserMap};
+use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery};
 
-use futures::{FutureExt, StreamExt};
 use warp::Filter;
 use warp::http::StatusCode;
 use base64;
@@ -40,6 +39,22 @@ pub fn create_cinema_page<'a>(
         .and_then(handlers::render_cinema)
 }
 
+pub fn create_room_filter(
+    users: UserMap,
+    rooms: Rooms,
+    urls: Urls,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path("createroom")
+        .and(warp::path::end())
+        .and(warp::get())
+        .and(auth(users))
+        .and(with_rooms(rooms))
+        .and(with_urls(urls))
+        .and(warp::query::<UrlQuery>())
+        .and_then(handlers::create_room)
+
+}
+
 fn with_sp(sp: Sp) -> impl Filter<Extract = (Sp,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || sp.clone())
 }
@@ -50,6 +65,14 @@ fn with_hba(hba: Hba) -> impl Filter<Extract = (Hba,), Error = std::convert::Inf
 
 fn with_users_map(users: UserMap) -> impl Filter<Extract = (UserMap,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || users.clone())
+}
+
+pub fn with_rooms(rooms: Rooms) -> impl Filter<Extract = (Rooms,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || rooms.clone())
+}
+
+fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || urls.clone())
 }
 
 pub fn auth(users: UserMap) -> impl Filter<Extract = (Authenticated,), Error = warp::Rejection> + Clone {
@@ -92,35 +115,4 @@ pub async fn recover_auth(err: warp::Rejection) -> Result<impl warp::Reply, warp
     } else {
         Err(warp::reject())
     }
-}
-
-pub fn websocket () {
-    let routes = warp::path("echo")
-            // The `ws()` filter will prepare the Websocket handshake.
-            .and(warp::ws())
-            .map(|ws: warp::ws::Ws| {
-                // And then our closure will be called when it completes...
-                ws.on_upgrade(|websocket| {
-                    // Just echo all messages back...
-                    let (tx, rx) = websocket.split();
-                    rx.forward(tx).map(|result| {
-                        if let Err(e) = result {
-                            eprintln!("websocket error: {:?}", e);
-                        }
-                    })
-                })
-            });
-
-    let routes1 = warp::path("echo")
-            .and(warp::ws())
-            .map(|ws: warp::ws::Ws| {
-                ws.on_upgrade(|websocket| {
-                    let (tx, rx) = websocket.split();
-                    rx.forward(tx).map(|result| {
-                        if let Err(e) = result {
-                            eprintln!("websocket error: {:?}", e);
-                        }
-                    })
-                })
-            });
 }

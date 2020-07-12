@@ -1,9 +1,14 @@
-use super::models::{Hba, Sp};
+use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery};
 use super::filters::Authenticated;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use warp::path::FullPath;
 use url::form_urlencoded::parse;
+use rand::Rng;
+use base64::decode;
+
+const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const ROOM_CODE_LEN: usize = 4;
 
 pub fn decode_url(fp: &FullPath) -> String {
     parse(fp.as_str().as_bytes())
@@ -32,14 +37,13 @@ pub async fn render_index<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp::
 
 
 pub async fn render_cinema<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp::path::FullPath) -> Result<impl warp::Reply, warp::Rejection> {
-    println!("CINEMA!!!!!!!!");
-    println!("FP = {:?}", fp);
     let path_str = decode_url(&fp).replace("/cinema/", "/browse/");
     let path = PathBuf::from(path_str.replace("/browse/", ""));
     let sp = sp.lock().await;
     println!("path = {:?}", path_str);
 
     if !sp.is_file(&path) {
+        println!("Rejecting, not a path... {:?}", path);
         return Err(warp::reject())
     }
 
@@ -50,4 +54,39 @@ pub async fn render_cinema<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp:
         .render("cinema.html", &data)
         .unwrap_or_else(|err| err.to_string());
     Ok(warp::reply::html(render))
+}
+
+fn generate_room_code() -> String {
+    let mut rng = rand::thread_rng();
+    (0..ROOM_CODE_LEN)
+        .map(|_| {
+            let idx = rng.gen_range(0, CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect()
+}
+
+pub async fn create_room(_: Authenticated, rooms: Rooms, urls: Urls, b64url: UrlQuery) -> Result<impl warp::Reply, warp::Rejection> {
+    info!("Create room called");
+    use std::str::from_utf8;
+    let mut code;
+    let decoded = decode(b64url.url.as_bytes()).map_err(|_| warp::reject())?;
+    let url = from_utf8(decoded.as_slice()).map_err(|_| warp::reject())?;
+
+    let mut rooms = rooms.lock().await;
+    let mut urls = urls.lock().await;
+
+    loop {
+        code = generate_room_code();
+        if !rooms.contains_key(&code) {
+            break;
+        }
+    }
+    let room = Room::new(code.clone());
+    rooms.insert(code.clone(), room);
+    urls.insert(code.clone(), url.to_owned());
+
+    let mut resp_map = HashMap::new();
+    resp_map.insert("room", code);
+    Ok(warp::reply::json(&resp_map))
 }

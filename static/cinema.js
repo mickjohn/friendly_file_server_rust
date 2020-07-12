@@ -134,7 +134,7 @@ $(document).ready( (event) => {
                 skipStatUpdate = true;
                 console.log('Sending stats message')
                 const time = player.currentTime;
-                const data = { user: name, data: { control: 'STATS', time: time } };
+                const data = { name: name, type: 'Stats', time: time };
                 socket.send(JSON.stringify(data));
             }
         }
@@ -143,7 +143,7 @@ $(document).ready( (event) => {
     player.addEventListener('suspend', function() {
         if (socket !== null && (isGuest ||  isDirector)) {
             const time = player.currentTime;
-            const data = { user: name, data: { control: 'STATS', time: time } };
+            const data = { name: name, type: 'Stats', time: time };
             socket.send(JSON.stringify(data));
         }
     });
@@ -189,14 +189,14 @@ $(document).ready( (event) => {
     function play() {
         if (socket === null) { return; }
         console.debug("Sending PLAY message to WS server");
-        const data = { user: name, data: { control: 'PLAY' } };
+        const data = { name: name, type: 'Play'};
         socket.send(JSON.stringify(data));
     }
 
     // Send pause message to websocket server
     function pause() {
         if (socket === null) { return; }
-        const data = { user: name, data: { control: 'PAUSE' } };
+        const data = { name: name, type: 'Pause' };
         console.debug("Sending PAUSE message to WS server");
         socket.send(JSON.stringify(data));
     }
@@ -206,7 +206,7 @@ $(document).ready( (event) => {
         if (socket === null) { return; }
         console.log('Sending seeked message')
         time = player.currentTime;
-        const data = { user: name, data: { control: 'SEEKED', time: time } };
+        const data = { name: name, type: 'Seeked', time: time };
         socket.send(JSON.stringify(data));
     }
 
@@ -253,7 +253,7 @@ $(document).ready( (event) => {
     $("#create-room").click(function () {
         console.debug("create-room button clicked");
         const b64Path = btoa(location.pathname);
-        const url = `${location.protocol}//${document.domain}:${location.port}/createroom?path=${b64Path}`;
+        const url = `${location.protocol}//${document.domain}:${location.port}/createroom?url=${b64Path}`;
         const httpRequest = new XMLHttpRequest();
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === XMLHttpRequest.DONE) {
@@ -262,7 +262,6 @@ $(document).ready( (event) => {
                     roomCode = resp['room'];
                     initialiseWebsocket(roomCode);
                     enableDirectorMode()
-
                     initSideWindow(roomCode, isDirector);
                 } else {
                     alert('There was a problem with the request.');
@@ -280,9 +279,9 @@ $(document).ready( (event) => {
     function initialiseWebsocket(wsRoomCode) {
         console.log("Initialising websocket");
         if (document.domain === 'localhost' || document.domain === '127.0.0.1') {
-            var wsUrl = 'ws://127.0.0.1:5001/cinema/' + wsRoomCode;
+            var wsUrl = 'ws://127.0.0.1:5000/rooms/' + wsRoomCode;
         } else {
-            var wsUrl = 'wss://' + document.domain + ':5001/cinema/' + wsRoomCode;
+            var wsUrl = 'wss://' + document.domain + ':5000/rooms/' + wsRoomCode;
         }
         console.debug(`websocket URL = ${wsUrl}`);
         socket = new WebSocket(wsUrl);
@@ -290,22 +289,22 @@ $(document).ready( (event) => {
             console.log(`received ${event.data}`);
             const msg = JSON.parse(event.data);
 
-            const control = msg.data;
-            if (control === 'STATS') {
+            const control = msg.type;
+            if (control === 'Stats') {
                 update_stats(msg);
-            } else if (control === 'PLAY') {
+            } else if (control === 'Play') {
                 console.log('Playing')
                 player.play();
-            } else if (control === 'PAUSE') {
+            } else if (control === 'Pause') {
                 console.log('Pausing')
                 player.pause();
-            } else if (control === 'SEEKED') {
+            } else if (control === 'Seeked') {
                 if (!isDirector) {
                     const t = msg.time;
                     console.log(`Seek time = ${t}`);
                     player.currentTime = t;
                 }
-            } else if (control === 'LEAVING') {
+            } else if (control === 'Disconnected') {
                 console.log("Deleting user row");
                 var id = msg['id'];
                 if (id !== null) {
@@ -317,7 +316,7 @@ $(document).ready( (event) => {
 
         socket.addEventListener('open', (event) => {
             console.log("Websocket opening!!");
-            const data = { user: name, data: { control: 'SEEKED', time: 0 } };
+            const data = { name: name, type: 'SEEKED', time: -1 };
             socket.send(JSON.stringify(data));
         });
 

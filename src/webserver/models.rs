@@ -1,25 +1,55 @@
 use std::sync::Arc;
 use std::collections::HashMap;
-use tokio::sync::Mutex;
+use tokio::sync::{mpsc, Mutex, RwLock};
 use crate::fs_utils::ServePoint;
 use std::path::PathBuf;
 use handlebars::Handlebars;
+use warp::ws::Message;
+use serde::Deserialize;
 
 use crate::hb_helpers;
 
+#[derive(Deserialize)]
+pub struct UrlQuery {
+    pub url: String,
+}
+
 pub type Sp = Arc<Mutex<ServePoint>>;
 pub type UserMap = Arc<Mutex<HashMap<String, String>>>;
-pub type Rooms = Arc<Mutex<HashMap<String, String>>>;
 
 #[derive(Clone)]
 pub struct Hba<'a> {
     pub hba: Arc<Mutex<Handlebars<'a>>>,
 }
 
+// For websockets
+pub type Sender = mpsc::UnboundedSender<Result<Message, warp::Error>>;
+pub type Rooms = Arc<Mutex<HashMap<String, Room>>>;
+pub type Urls = Arc<Mutex<HashMap<String, String>>>;
+
+// For websockets
 pub struct Room {
-    pub id: u64,
-    pub url: Option<String>,
-    pub users: Vec<String>,
+    pub id: String,
+    pub users_by_id: HashMap<usize, User>,
+    pub users_by_ws: HashMap<Sender, User>,
+}
+
+impl Room {
+    pub fn new(id: String) -> Self {
+        return Room {
+            id,
+            users_by_id: HashMap::new(),
+            users_by_ws: HashMap::new(),
+        }
+    }
+}
+
+// For websockets
+#[derive(Clone)]
+pub struct User {
+    pub id: usize,
+    pub name: String,
+    pub sender: Sender,
 }
 
 pub fn new_serve_point(path: PathBuf) -> Sp {
