@@ -213,7 +213,7 @@ $(document).ready( (event) => {
     // Update the stats table with the timestamps of the different users
     function update_stats(data) {
         const statsTable = document.getElementById("stats");
-        const name = data['user'];
+        const name = data['name'];
         const time = data['time'];
         const id = data['id'];
 
@@ -290,7 +290,7 @@ $(document).ready( (event) => {
             const msg = JSON.parse(event.data);
 
             const control = msg.type;
-            if (control === 'Stats') {
+            if (control === 'StatsResponse') {
                 update_stats(msg);
             } else if (control === 'Play') {
                 console.log('Playing')

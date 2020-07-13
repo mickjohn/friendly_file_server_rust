@@ -3,6 +3,7 @@ use super::filters::Authenticated;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use warp::path::FullPath;
+use warp::http::Uri;
 use url::form_urlencoded::parse;
 use rand::Rng;
 use base64::decode;
@@ -38,12 +39,11 @@ pub async fn render_index<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp::
 
 pub async fn render_cinema<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp::path::FullPath) -> Result<impl warp::Reply, warp::Rejection> {
     let path_str = decode_url(&fp).replace("/cinema/", "/browse/");
-    let path = PathBuf::from(path_str.replace("/browse/", ""));
+    let path: PathBuf = path_str.replace("/browse/", "").split("/").collect();
     let sp = sp.lock().await;
-    println!("path = {:?}", path_str);
 
     if !sp.is_file(&path) {
-        println!("Rejecting, not a path... {:?}", path);
+        error!("Rejecting, not a path... {:?}", path);
         return Err(warp::reject())
     }
 
@@ -82,11 +82,29 @@ pub async fn create_room(_: Authenticated, rooms: Rooms, urls: Urls, b64url: Url
             break;
         }
     }
+    let url_with_query = format!("{}?cinema=1&room={}", url, code);
     let room = Room::new(code.clone());
     rooms.insert(code.clone(), room);
-    urls.insert(code.clone(), url.to_owned());
+    urls.insert(code.clone(), url_with_query.to_owned());
 
     let mut resp_map = HashMap::new();
     resp_map.insert("room", code);
     Ok(warp::reply::json(&resp_map))
+}
+
+pub async fn wwf_lookup_redirect(
+    _: Authenticated,
+    code: String,
+    urls: Urls
+) -> Result<impl warp::Reply, warp::Rejection> {
+    use std::str::FromStr;
+
+    let urls = urls.lock().await;
+    if let Some(url) = urls.get(&code) {
+        let uri = Uri::from_str(url).unwrap();
+        let redirect = warp::redirect(uri);
+        Ok(redirect)
+    } else {
+        Err(warp::reject())
+    }
 }

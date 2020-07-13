@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use std::collections::HashMap;
-use tokio::sync::{mpsc, Mutex, RwLock};
+use tokio::sync::{mpsc, Mutex};
 use crate::fs_utils::ServePoint;
 use std::path::PathBuf;
 use handlebars::Handlebars;
@@ -48,7 +48,6 @@ impl Room {
 #[derive(Clone)]
 pub struct User {
     pub id: usize,
-    pub name: String,
     pub sender: Sender,
 }
 

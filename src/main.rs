@@ -5,6 +5,7 @@ use warp::Filter;
 use warp::http::header::{HeaderMap, HeaderValue};
 use argon2::{self, Config};
 use rand::Rng;
+use warp::http::Uri;
 
 #[macro_use]
 extern crate lazy_static;
@@ -41,33 +42,51 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 
     // Filters
+    // The 'cinema' page, i.e. where users can 
     let cinema = filters::create_cinema_page(sp.clone(), hba.clone() , users.clone());
     let api = filters::create_listing(sp, hba, users.clone());
-    let static_files = warp::path("static").and(warp::fs::dir("static"));
-    let create_room = filters::create_room_filter(users, rooms.clone(), urls);
+    let static_files = warp::path("static")
+                        .and(filters::auth(users.clone()))
+                        .and(warp::fs::dir("static"))
+                        .map(|_ : filters::Authenticated, file| file);
+
+    // The endpoint used to create a Websocket cinema room
+    let create_room = filters::create_room_filter(users.clone(), rooms.clone(), urls.clone());
+
+    // The endpoint to serve files. Should be used AFTER the 'api' filter, in order 
+    // to ensure that Directories get rendered as an index, and that this serves 
+    // the files
     let files = warp::path("browse")
+                    .and(filters::auth(users.clone()))
                     .and(warp::fs::dir(root_path.clone()))
+                    .map(|_: filters::Authenticated, file| file )
                     .with(warp::reply::with::headers(headers));
 
+    // The websocket enpoint used to join the rooms
     let websocket = warp::path("rooms")
+                    .and(filters::auth(users.clone()))
                     .and(warp::path::param::<String>())
                     .and(warp::path::end())
                     .and(warp::ws())
                     .and(filters::with_rooms(rooms))
-                    .map(|code: String, ws: warp::ws::Ws, rooms: models::Rooms| {
+                    .map(|_, code: String, ws: warp::ws::Ws, rooms: models::Rooms| {
                         ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms))
                     });
 
-    // let redirect = warp::any().map(|| warp::redirect(Uri::from_static("/browse/")));
+    // Redirect index to browse endpoint
+    let redirect = warp::path::end().map(|| warp::redirect(Uri::from_static("/browse/")));
 
-    // View access logs by setting `RUST_LOG=todos`.
+    // Redirect the shortened URLS
+    let wwf_redirect = filters::wwf_redirect(users, urls);
+
     let routes = api.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
-                   .or(create_room)
-                   .or(websocket)
-                   .or(files)
-                   .or(static_files);
-                //    .or(redirect);
+                   .or(create_room.recover(filters::recover_auth))
+                   .or(websocket.recover(filters::recover_auth))
+                   .or(files.recover(filters::recover_auth))
+                   .or(static_files.recover(filters::recover_auth))
+                   .or(wwf_redirect.recover(filters::recover_auth))
+                   .or(redirect);
 
     // Start up the server...
     warp::serve(routes).run((config.ipaddr, config.webport)).await;

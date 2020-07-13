@@ -52,7 +52,17 @@ pub fn create_room_filter(
         .and(with_urls(urls))
         .and(warp::query::<UrlQuery>())
         .and_then(handlers::create_room)
+}
 
+pub fn wwf_redirect(
+    users: UserMap,
+    urls: Urls,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path("wwf")
+        .and(auth(users))
+        .and(warp::path::param::<String>())
+        .and(with_urls(urls))
+        .and_then(handlers::wwf_lookup_redirect)
 }
 
 fn with_sp(sp: Sp) -> impl Filter<Extract = (Sp,), Error = std::convert::Infallible> + Clone {
