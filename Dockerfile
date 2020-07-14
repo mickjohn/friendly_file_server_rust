@@ -11,7 +11,11 @@ EXPOSE 5000
 CMD [ \
         "friendly_file_server_rust"\
         ,"--sharedir"\
-        ,"/app/test"\
+        ,"/var/share"\
         ,"--ipaddr"\
         ,"0.0.0.0"\
+        ,"--credsfile"\
+        ,"/app/credentials"\
+        ,"--port"\
+        ,"5000"\
     ]

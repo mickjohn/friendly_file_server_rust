@@ -5,8 +5,7 @@ use std::fs;
 
 pub struct Config {
     pub ipaddr: [u8; 4],
-    pub webport: u16,
-    pub sktport: u16,
+    pub port: u16,
     pub sharedir: String,
     pub users: HashMap<String, String>,
 }
@@ -20,15 +19,10 @@ fn parse_args<'a>() -> ArgMatches<'a> {
          .help("IP address to bind to")
          .default_value("127.0.0.1")
          .takes_value(true))
-    .arg(Arg::with_name("webport")
-         .long("webport")
+    .arg(Arg::with_name("port")
+         .long("port")
          .help("The HTTP webserver port to listen to")
          .default_value("5000")
-         .takes_value(true))
-    .arg(Arg::with_name("sktport")
-         .long("sktport")
-         .help("the websocket port to bind to")
-         .default_value("5001")
          .takes_value(true))
     .arg(Arg::with_name("sharedir")
          .long("sharedir")
@@ -48,14 +42,8 @@ pub fn parse_config_from_args() -> Result<Config, String> {
     let ipaddr_str = matches.value_of("ipaddr").unwrap().to_owned();
     let ipaddr = validate_ip_addr(&ipaddr_str)?;
 
-    let webport: u16 = matches
-        .value_of("webport")
-        .unwrap()
-        .parse()
-        .map_err(|e| format!("{}", e))?;
-
-    let sktport: u16 = matches
-        .value_of("sktport")
+    let port: u16 = matches
+        .value_of("port")
         .unwrap()
         .parse()
         .map_err(|e| format!("{}", e))?;
@@ -76,8 +64,7 @@ pub fn parse_config_from_args() -> Result<Config, String> {
 
     Ok(Config {
         ipaddr,
-        webport,
-        sktport,
+        port,
         sharedir,
         users,
     })

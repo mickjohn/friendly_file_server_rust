@@ -281,7 +281,7 @@ $(document).ready( (event) => {
         if (document.domain === 'localhost' || document.domain === '127.0.0.1') {
             var wsUrl = 'ws://127.0.0.1:5000/rooms/' + wsRoomCode;
         } else {
-            var wsUrl = 'wss://' + document.domain + ':5000/rooms/' + wsRoomCode;
+            var wsUrl = 'wss://' + document.domain + ':5001/rooms/' + wsRoomCode;
         }
         console.debug(`websocket URL = ${wsUrl}`);
         socket = new WebSocket(wsUrl);
