@@ -26,7 +26,7 @@ pipeline {
                     [
                         sshUserPrivateKey(credentialsId: 'mick-idrsa', keyFileVariable: 'SSH_KEY_FILE', passphraseVariable: '', usernameVariable: ''),
                         usernamePassword(credentialsId: 'mick-sudo-pass', passwordVariable: 'BECOME_PASS', usernameVariable: 'BECOME_USER'),
-                        usernamePassword(credentialsId: 'ffs_browser_rust', passwordVariable: 'FFS_BROWSER_HASH', usernameVariable: 'FFS_BROWSER_USER'),
+                        usernamePassword(credentialsId: 'ffs_browser_rust_base64', passwordVariable: 'FFS_BROWSER_HASH', usernameVariable: 'FFS_BROWSER_USER'),
                     ]
                 ) {
                     sshagent(['mick-idrsa']) {
@@ -51,7 +51,6 @@ pipeline {
 
                         # Set ffs users json
                         FFS_USERS="{"ffs_users": [{ "username": "${FFS_BROWSER_USER}", "password_hash": "$FFS_BROWSER_HASH"}]}"
-                        echo "hash = ${FFS_BROWSER_HASH}" > debug.txt
 
                         # Call ansible
                         /usr/local/bin/ansible-playbook \
