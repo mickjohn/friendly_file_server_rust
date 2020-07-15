@@ -5,12 +5,12 @@ RUN apk add --no-cache musl-dev && cargo build --release
 
 FROM alpine:3.7
 WORKDIR /app
-COPY static /app
+COPY static /app/static
 
 COPY --from=builder /app/target/release/friendly_file_server_rust /app
 EXPOSE 5000
 CMD [ \
-        "friendly_file_server_rust"\
+        "/app/friendly_file_server_rust"\
         ,"--sharedir"\
         ,"/var/share"\
         ,"--ipaddr"\
