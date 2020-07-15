@@ -51,6 +51,7 @@ pipeline {
 
                         # Set ffs users json
                         FFS_USERS="{"ffs_users": [{ "username": "${FFS_BROWSER_USER}", "password_hash": "$FFS_BROWSER_HASH"}]}"
+                        echo "hash = ${FFS_BROWSER_HASH}"
 
                         # Call ansible
                         /usr/local/bin/ansible-playbook \
