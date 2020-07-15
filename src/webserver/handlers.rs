@@ -18,7 +18,12 @@ pub fn decode_url(fp: &FullPath) -> String {
 }
 
 pub async fn render_index<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp::path::FullPath) -> Result<impl warp::Reply, warp::Rejection> {
-    let path_str = decode_url(&fp).replace("/browse/", "").replace("/", "\\");
+    let path_str = if cfg!(target_os = "windows") {
+        decode_url(&fp).replace("/browse/", "").replace("/", "\\")
+    } else {
+        decode_url(&fp).replace("/browse/", "")
+    };
+
     let path = PathBuf::from(&path_str);
     let sp = sp.lock().await;
 
@@ -67,7 +72,6 @@ fn generate_room_code() -> String {
 }
 
 pub async fn create_room(_: Authenticated, rooms: Rooms, urls: Urls, b64url: UrlQuery) -> Result<impl warp::Reply, warp::Rejection> {
-    info!("Create room called");
     use std::str::from_utf8;
     let mut code;
     let decoded = decode(b64url.url.as_bytes()).map_err(|_| warp::reject())?;
