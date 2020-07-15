@@ -105,9 +105,9 @@ fn parse_auth_header(header: &str) -> (String, String) {
     let b64auth = header_parts[1];
     let decoded = base64::decode(b64auth.as_bytes()).unwrap();
     let decoded_str = std::str::from_utf8(decoded.as_slice()).unwrap();
-    let mut auth_parts: Vec<&str> = decoded_str.split(":").collect();
-    let username = auth_parts.remove(0);
-    let password = auth_parts.join("");
+    let auth_parts: Vec<&str> = decoded_str.splitn(2, ":").collect();
+    let username = auth_parts[0];
+    let password = auth_parts[1];
     return (username.to_owned(), password.to_owned());
 }
 
