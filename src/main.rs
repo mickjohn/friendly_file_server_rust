@@ -64,12 +64,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // The websocket enpoint used to join the rooms
     let websocket = warp::path("rooms")
-                    .and(filters::auth(users.clone()))
                     .and(warp::path::param::<String>())
                     .and(warp::path::end())
                     .and(warp::ws())
                     .and(filters::with_rooms(rooms))
-                    .map(|_, code: String, ws: warp::ws::Ws, rooms: models::Rooms| {
+                    .map(|code: String, ws: warp::ws::Ws, rooms: models::Rooms| {
                         ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms))
                     });
 
@@ -77,15 +76,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let redirect = warp::path::end().map(|| warp::redirect(Uri::from_static("/browse/")));
 
     // Redirect the shortened URLS
-    let wwf_redirect = filters::wwf_redirect(users, urls);
+    let wwf_redirect = filters::wwf_redirect(users.clone(), urls);
 
     let routes = api.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
                    .or(create_room.recover(filters::recover_auth))
-                   .or(websocket.recover(filters::recover_auth))
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
+                   .or(websocket)
                    .or(redirect);
 
     // Start up the server...
