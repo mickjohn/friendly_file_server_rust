@@ -11,7 +11,7 @@ use std::str;
 #[derive(Clone)]
 pub struct Authenticated;
 
-pub fn create_listing<'a>(
+pub fn render_file_listing<'a>(
     sp: Sp,
     hba: Hba<'a>,
     users: UserMap,
@@ -25,7 +25,7 @@ pub fn create_listing<'a>(
         .and_then(handlers::render_index)
 }
 
-pub fn create_cinema_page<'a>(
+pub fn render_cinema_page<'a>(
     sp: Sp,
     hba: Hba<'a>,
     users: UserMap,

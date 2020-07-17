@@ -43,8 +43,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Filters
     // The 'cinema' page, i.e. where users can 
-    let cinema = filters::create_cinema_page(sp.clone(), hba.clone() , users.clone());
-    let api = filters::create_listing(sp, hba, users.clone());
+    let cinema = filters::render_cinema_page(sp.clone(), hba.clone() , users.clone());
+    let listing = filters::render_file_listing(sp, hba, users.clone());
     let static_files = warp::path("static")
                         .and(filters::auth(users.clone()))
                         .and(warp::fs::dir("static"))
@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Redirect the shortened URLS
     let wwf_redirect = filters::wwf_redirect(users.clone(), urls);
 
-    let routes = api.recover(filters::recover_auth)
+    let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
                    .or(create_room.recover(filters::recover_auth))
                    .or(files.recover(filters::recover_auth))

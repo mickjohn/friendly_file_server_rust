@@ -6,9 +6,9 @@ $(document).ready( (event) => {
     var name = "user";
     var roomCode = null;
     var justJoined = true;
-    var skipStatUpdate = false;
     var isDirector = false;
     var isGuest = false;
+    var statsInterval = null;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('room') !== null) {
         roomCode = urlParams.get('room');
@@ -90,19 +90,11 @@ $(document).ready( (event) => {
 
     player.addEventListener('pause', (e) => {
         changeButtonState(player, 'playpause');
-        console.log(e)
     });
-
-    player.addEventListener('playing', (e) => { console.log(e) });
 
     player.addEventListener('play', (e) => {
         changeButtonState(player, 'playpause');
-        console.log(e);
     });
-
-    player.addEventListener('progress', (e) => { console.log(e) });
-    player.addEventListener('stalled', (e) => { console.log(e) });
-    player.addEventListener('suspend', (e) => { console.log(e) });
 
     $('#progress').click(function (e) {
         if (!isGuest) {
@@ -124,20 +116,7 @@ $(document).ready( (event) => {
         $('#currentTime').text(toMovieTime(player.currentTime));
         $('#progress').val(player.currentTime);
         const width = Math.floor((player.currentTime / player.duration) * 100) + '%';
-        console.log(`width = ${width}`);
         $('#progress-bar').css('width', width);
-
-        if (socket !== null && socket.readyState === WebSocket.OPEN) {
-            if (skipStatUpdate) {
-                skipStatUpdate = false;
-            } else {
-                skipStatUpdate = true;
-                console.log('Sending stats message')
-                const time = player.currentTime;
-                const data = { name: name, type: 'Stats', time: time };
-                socket.send(JSON.stringify(data));
-            }
-        }
     });
 
     player.addEventListener('suspend', function() {
@@ -188,7 +167,6 @@ $(document).ready( (event) => {
     // Send play message to websocket server
     function play() {
         if (socket === null) { return; }
-        console.debug("Sending PLAY message to WS server");
         const data = { name: name, type: 'Play'};
         socket.send(JSON.stringify(data));
     }
@@ -197,14 +175,12 @@ $(document).ready( (event) => {
     function pause() {
         if (socket === null) { return; }
         const data = { name: name, type: 'Pause' };
-        console.debug("Sending PAUSE message to WS server");
         socket.send(JSON.stringify(data));
     }
 
     // Send seeked message and current time to websocket server
     function seeked() {
         if (socket === null) { return; }
-        console.log('Sending seeked message')
         time = player.currentTime;
         const data = { name: name, type: 'Seeked', time: time };
         socket.send(JSON.stringify(data));
@@ -220,8 +196,6 @@ $(document).ready( (event) => {
         if (justJoined && time != '0') {
             justJoined = false;
             const time_f = parseFloat(time) + 1;
-            console.log(`Just joined. Setting current time to ${time_f}`);
-            console.log(`Just joined. time is ${data['time']}`);
             player.currentTime = time_f;
             player.play();
         }
@@ -251,7 +225,6 @@ $(document).ready( (event) => {
     }
 
     $("#create-room").click(function () {
-        console.debug("create-room button clicked");
         const b64Path = btoa(location.pathname);
         const url = `${location.protocol}//${document.domain}:${location.port}/createroom?url=${b64Path}`;
         const httpRequest = new XMLHttpRequest();
@@ -283,10 +256,8 @@ $(document).ready( (event) => {
         } else {
             var wsUrl = 'wss://' + document.domain + ':5001/rooms/' + wsRoomCode;
         }
-        console.debug(`websocket URL = ${wsUrl}`);
         socket = new WebSocket(wsUrl);
         socket.addEventListener('message', (event) => {
-            console.log(`received ${event.data}`);
             const msg = JSON.parse(event.data);
 
             const control = msg.type;
@@ -318,6 +289,11 @@ $(document).ready( (event) => {
             console.log("Websocket opening!!");
             const data = { name: name, type: 'SEEKED', time: -1 };
             socket.send(JSON.stringify(data));
+
+            // Setup the stats reporting interval
+            if (statsInterval === null) {
+                statsInterval = setInterval(sendStats, 500);
+            }
         });
 
         socket.addEventListener('close', (event) => {
@@ -337,17 +313,14 @@ $(document).ready( (event) => {
             elem.setAttribute('data-state', 'visible');
         }
 
-
         // Add 'seek' listeners to the player
         player.addEventListener('seeked', function (e) {
-            console.log(e)
             pause();
             seeked();
         });
 
         player.addEventListener('seeking', function (e) {
             pause();
-            console.log(e)
         });
     }
 
@@ -372,6 +345,14 @@ $(document).ready( (event) => {
         $("#room-code-box-side-window").text(createWwfUrl(roomCode));
         $(".show-if-wwf").attr("data-state", "visible");
         $(".room-code-link").val(url);
+    }
+
+    function sendStats() {
+        if (socket !== null && socket.readyState === WebSocket.OPEN) {
+            const time = player.currentTime;
+            const data = { name: name, type: 'Stats', time: time };
+            socket.send(JSON.stringify(data));
+        }
     }
 
 });

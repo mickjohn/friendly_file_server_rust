@@ -33,7 +33,7 @@
 
    <div class="content">
     <h1>Mickflix</h1>
-    <div class="show-if-director" data-state="hidden">
+    <div class="show-if-director help-box" data-state="hidden">
       <h4>How to use</h4>
       <p>
         When you clicked on the 'Create a room' button a virtual room was
