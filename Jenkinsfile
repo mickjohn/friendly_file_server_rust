@@ -31,6 +31,10 @@ pipeline {
                 ) {
                     sshagent(['mick-idrsa']) {
                         sh label: '', script: '''
+                        # DEBUG
+                        echo "SSH_KEY_FILE = $SSH_KEY_FILE >> debug.log"
+                        echo "BECOME_PASS = $BECOME_PASS >> debug.log"
+                        echo "FFS_BROWSER_HASH = $FFS_BROWSER_HASH >> debug.log"
                         # Add mickjohn.com to inventory
                         echo "
                         [all]
