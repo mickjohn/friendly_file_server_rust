@@ -28,11 +28,6 @@ pipeline {
                               ]) {
             sshagent(credentials: ['mick-idrsa']) {
               sh '''
-                        # DEBUG
-                        echo "SSH_KEY_FILE = $SSH_KEY_FILE" >> debug.log
-                        echo "BECOME_PASS = $BECOME_PASS" >> debug.log
-                        echo "FFS_BROWSER_HASH = $FFS_BROWSER_HASH" >> debug.log
-
                         # Add mickjohn.com to inventory
                         echo "
                         [all]
@@ -52,10 +47,18 @@ pipeline {
                         rm -rf /var/lib/jenkins/.ansible/cp/
 
                         # Set ffs users json
-                        FFS_USERS="{"ffs_users": [{ "username": "${FFS_BROWSER_USER}", "password_hash": "$FFS_BROWSER_HASH"}]}"
+                        FFS_USERS="{\"ffs_users\": [{ \"username\": \"${FFS_BROWSER_USER}\", \"password_hash\": \"$FFS_BROWSER_HASH\"}]}"
 
                         # Call ansible
-                        /usr/local/bin/ansible-playbook                             --user mick                             -i inventory.ini                             -K                             --private-key "$SSH_KEY_FILE"                             --extra-vars "ansible_become_pass=$BECOME_PASS"                             --extra-vars "service_role=friendly_file_server_rust"                             --extra-vars "${FFS_USERS}"                             ansible/playbooks/main.yml
+                        /usr/local/bin/ansible-playbook \
+                          --user mick \
+                          -i inventory.ini \
+                          -K \
+                          --private-key "$SSH_KEY_FILE" \
+                          --extra-vars "ansible_become_pass=$BECOME_PASS" \
+                          --extra-vars "service_role=friendly_file_server_rust" \
+                          --extra-vars "${FFS_USERS}" \
+                          ansible/playbooks/main.yml
                         '''
             }
 
