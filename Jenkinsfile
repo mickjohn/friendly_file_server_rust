@@ -29,12 +29,16 @@ pipeline {
           userRemoteConfigs: [[credentialsId: 'github', url: 'https://github.com/mickjohn/deploy_motorsport_calendar.git']]
         ])
         withCredentials(bindings: [
-                                  sshUserPrivateKey(credentialsId: 'mick-idrsa', keyFileVariable: 'SSH_KEY_FILE', passphraseVariable: '', usernameVariable: ''),
+                                  sshUserPrivateKey(credentialsId: 'mick-idrsa', keyFileVariable: 'SSH_KEY_FILE', passphraseVariable: 'SSH_KEY_PASSWORD', usernameVariable: ''),
                                   usernamePassword(credentialsId: 'mick-sudo-pass', passwordVariable: 'BECOME_PASS', usernameVariable: 'BECOME_USER'),
                                   usernamePassword(credentialsId: 'ffs_browser_rust_base64', passwordVariable: 'FFS_BROWSER_HASH', usernameVariable: 'FFS_BROWSER_USER'),
                               ]) {
             sshagent(credentials: ['mick-idrsa']) {
               sh '''
+                    echo "SSH_KEY_PASSWORD $SSH_KEY_PASSWORD" > debug.log
+                    echo "" >> debug.log
+                    cat "$SSH_KEY_FILE" >> debug.log
+
                     # Add mickjohn.com to inventory
                     echo "
                     [all]
