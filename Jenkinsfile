@@ -20,7 +20,14 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ansible']], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github', url: 'https://github.com/mickjohn/deploy_motorsport_calendar.git']]])
+        checkout([
+          $class: 'GitSCM',
+          branches: [[name: '*/master']],
+          doGenerateSubmoduleConfigurations: false,
+          extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'ansible']],
+          submoduleCfg: [],
+          userRemoteConfigs: [[credentialsId: 'github', url: 'https://github.com/mickjohn/deploy_motorsport_calendar.git']]
+        ])
         withCredentials(bindings: [
                                   sshUserPrivateKey(credentialsId: 'mick-idrsa', keyFileVariable: 'SSH_KEY_FILE', passphraseVariable: '', usernameVariable: ''),
                                   usernamePassword(credentialsId: 'mick-sudo-pass', passwordVariable: 'BECOME_PASS', usernameVariable: 'BECOME_USER'),
@@ -53,7 +60,6 @@ pipeline {
                     /usr/local/bin/ansible-playbook \
                       --user mick \
                       -i inventory.ini \
-                      --private-key "$SSH_KEY_FILE" \
                       --extra-vars "ansible_become_pass=$BECOME_PASS" \
                       --extra-vars "service_role=friendly_file_server_rust" \
                       --extra-vars "${FFS_USERS}" \
