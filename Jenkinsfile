@@ -61,6 +61,7 @@ pipeline {
                       -vvvv \
                       --user mick \
                       -i inventory.ini \
+                      --private-key "$SSH_KEY_FILE" \
                       --extra-vars "ansible_become_pass=$BECOME_PASS" \
                       --extra-vars "service_role=friendly_file_server_rust" \
                       --extra-vars "${FFS_USERS}" \
