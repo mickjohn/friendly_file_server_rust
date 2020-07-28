@@ -58,6 +58,7 @@ pipeline {
 
                     # Call ansible
                     /usr/local/bin/ansible-playbook \
+                      -vvvv \
                       --user mick \
                       -i inventory.ini \
                       --extra-vars "ansible_become_pass=$BECOME_PASS" \
