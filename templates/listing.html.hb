@@ -16,7 +16,7 @@
       Index of <a href="/browse">root /</a>
 
       {{#each listing.trail }}
-      <a href="/browse/{{ urlencode this.[0] }}">
+      <a href="/browse/{{ urlencode this.[0] }}/">
         {{ this.[1] }} /
       </a>
       {{/each}}
