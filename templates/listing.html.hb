@@ -13,7 +13,7 @@
    <div class="content">
     <h1>Friendly File Server</h1>
     <div class="path">
-      Index of <a href="/browse">root /</a>
+      Index of <a href="/browse/">root /</a>
 
       {{#each listing.trail }}
       <a href="/browse/{{ urlencode this.[0] }}/">
