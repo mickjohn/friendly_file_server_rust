@@ -189,169 +189,222 @@ video {
 }
 
 /* Video Player Controls */
-.controls, .controls > * {
-	padding:0;
-	margin:0;
+
+.video-and-controls {
+    display: inline-block;
+    position: relative;
 }
+
+#video-control-buttons {
+    display: flex;
+}
+
 .controls {
+    color: white;
     border-radius: 10px;
-	overflow:hidden;
-	background:transparent;
-	width: 80%;
-	height: 3%; /* of figure's height */
-    position:relative;
-    background-color: rgb(148, 148, 148);
+    overflow: hidden;
+    background: transparent;
+    width: 95%;
+    position: relative;
+    /* background-color: rgb(148, 148, 148); */
     padding: 9px 5px 8px 5px;
     margin: 10px auto 0 auto;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
+
 .controls[data-state=hidden] {
-	display:none;
+    display: none;
 }
+
 .controls[data-state=visible] {
-	display:block;
-}
-.controls > * {
-	float:left;
-	width: 2%;
-	height:100%;
-	margin-left:0.1953125%;
-	display:block;
+    display: block;
 }
 
 #timeDisplay {
-    width: 10%;
-    margin-top: 0.3%;
+    margin-left: auto;
 }
 
-#timeDisplay b span {
-    padding-left: 6px;
-    padding-right: 6px;
+.progress {
+    width: 100%;
+    height: 5px;
 }
 
-.controls > *:first-child {
-	margin-left:0;
+.progress-and-time {
+    display: flex;
+    justify-content: space-between;
 }
-.controls .progress {
-	cursor:pointer;
-	width:75.390625%;
-}
+
 .controls button {
-	text-align:center;
-	overflow:hidden;
-	white-space:nowrap;
-  	text-overflow:ellipsis;
-  	border:none;
-  	cursor:pointer;
-  	text-indent:-99999px;
-  	background:transparent;
-  	background-size:contain;
-  	background-repeat:no-repeat;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border: none;
+    cursor: pointer;
+    text-indent: -99999px;
+    background: transparent;
+    background-size: contain;
+    background-repeat: no-repeat;
+    width: 22px;
+    height: 28px;
+    /* padding: 4px 2px 4px 2px; */
+    margin: 2px 6px 0 6px;
 }
-.controls button:hover, .controls button:focus {
-	opacity:0.5;
-}
+
+/* .controls button:hover, .controls button:focus {
+    width: 26px;
+    height: 34px;
+    padding: 0;
+} */
+
 .controls button[data-state="play"] {
-	background-image: url('/static/icons/play_icon.svg');
+    background-image: url('/static/icons/play_icon.svg');
 }
+
 .controls button[data-state="pause"] {
-	background-image: url('/static/icons/pause_icon.svg');
+    background-image: url('/static/icons/pause_icon.svg');
 }
+
 .controls button[data-state="mute"] {
-	background-image: url('/static/icons/volume_icon.svg');	
+    background-image: url('/static/icons/volume_icon.svg');
 }
+
 .controls button[data-state="unmute"] {
-	background-image: url('/static/icons/volume_muted.svg');	
+    background-image: url('/static/icons/volume_muted.svg');
 }
+
 .controls button[data-state="volup"] {
-	background-image: url('/static/icons/volume_up.svg');	
+    background-image: url('/static/icons/volume_up.svg');
 }
+
 .controls button[data-state="voldown"] {
-	background-image: url('/static/icons/volume_down.svg');	
+    background-image: url('/static/icons/volume_down.svg');
 }
+
 .controls button[data-state="go-fullscreen"] {
-	background-image: url('/static/icons/fullscreen.svg');	
+    background-image: url('/static/icons/fullscreen.svg');
 }
+
 .controls button[data-state="cancel-fullscreen"] {
-	background-image: url('/static/icons/exit_fullscreen.svg');	
+    background-image: url('/static/icons/exit_fullscreen.svg');
 }
+
+/* Full screen button */
+
+#fs {
+    margin-left: auto;
+}
+
 .controls progress {
-	display:block;
-	width:100%;
-	height:81%;
-	margin-top:2px;
-	margin-top:0.125rem;
-	border:none;
-	overflow:hidden;
-	-moz-border-radius:2px;
-	-webkit-border-radius:2px;
-	border-radius:2px;
-	color:#0095dd; /* Internet Explorer uses this value as the progress bar's value colour */
+    flex: 0;
+    display: block;
+    cursor: pointer;
+    width: 100%;
+    height: 81%;
+    margin-top: 2px;
+    margin-top: 0.125rem;
+    border: none;
+    overflow: hidden;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    color: #0095dd;
+    /* Internet Explorer uses this value as the progress bar's value colour */
 }
+
 .controls progress[data-state="fake"] {
-	background:#e6e6e6;
-	height:65%;
+    background: #e6e6e6;
+    height: 65%;
 }
+
 .controls progress span {
-	width:0%;
-	height:100%;
-	display:inline-block;
-	background-color:#2a84cd;	
+    width: 0%;
+    height: 100%;
+    display: inline-block;
+    background-color: #2a84cd;
 }
 
 .controls progress::-moz-progress-bar {
-	background-color:#0095dd;
+    background-color: #0095dd;
 }
+
 /* Chrome requires its own rule for this, otherwise it ignores it */
+
 .controls progress::-webkit-progress-value {
-	background-color:#0095dd;
+    background-color: #0095dd;
 }
 
 /* fullscreen */
+
 html:-ms-fullscreen {
-	width:100%;
+    width: 100%;
 }
+
 :-webkit-full-screen {
-	background-color:transparent;
+    background-color: transparent;
 }
-video:-webkit-full-screen + .controls {
-	background:#ccc; /* required for Chrome which doesn't heed the transparent value set above */
+
+video:-webkit-full-screen+.controls {
+    background: #ccc;
+    /* required for Chrome which doesn't heed the transparent value set above */
 }
-video:-webkit-full-screen + .controls progress {
-	margin-top:0.5rem;
+
+video:-webkit-full-screen+.controls progress {
+    margin-top: 0.5rem;
 }
 
 /* hide controls on fullscreen with WebKit */
+
 figure[data-fullscreen=true] video::-webkit-media-controls {
-	display:none !important;
+    display: none !important;
 }
+
 figure[data-fullscreen=true] {
-	max-width:100%;
-	width:100%;
-	margin:0;
-	padding:0;
-	max-height:100%;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    max-height: 100%;
     display: flex;
 }
+
 figure[data-fullscreen=true] video {
-    max-height: 92%;
+    max-height: 100%;
     max-width: 100%;
     width: 100%;
     margin: 0;
 }
 
 figure[data-fullscreen=true] figcaption {
-	display:none;
+    display: none;
 }
+
 figure[data-fullscreen=true] .controls {
-	position: absolute;
-	bottom:2%;
-	width:80%;
-	z-index:2147483647;
+    position: absolute;
+    bottom: 2%;
+    width: 80%;
+    z-index: 2147483647;
     margin-left: 10%;
 }
-figure[data-fullscreen=true] .controls li {
-	width:5%;
+
+figure[data-fullscreen=true]>.video-and-controls {
+    width: 100%;
 }
-figure[data-fullscreen=true] .controls .progress {
-	width:68%;
+
+#image-cache {
+    width: 0px;
+    height: 0px;
+    display: inline;
+    background-image: url('/static/icons/play_icon.svg');
+    background-image: url('/static/icons/pause_icon.svg');
+    background-image: url('/static/icons/volume_icon.svg');
+    background-image: url('/static/icons/volume_muted.svg');
+    background-image: url('/static/icons/volume_up.svg');
+    background-image: url('/static/icons/volume_down.svg');
+    background-image: url('/static/icons/fullscreen.svg');
+    background-image: url('/static/icons/exit_fullscreen.svg');
+    background-image: url();
 }

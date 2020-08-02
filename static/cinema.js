@@ -1,7 +1,10 @@
+/* Global Vars */
+var hideVideoControlsTimeout = null;
+var mouseOverControls = false;
 
 // window.addEventListener('load', (event) => {
 $(document).ready( (event) => {
-    /* Global Vars */
+    /* More Global Vars */
     var socket = null;
     var name = "user";
     var roomCode = null;
@@ -16,7 +19,6 @@ $(document).ready( (event) => {
         enableGuestMode();
         initSideWindow(roomCode, false);
     }
-
 
     /************/
     /* Elements */
@@ -34,6 +36,33 @@ $(document).ready( (event) => {
         if (nameInput.checkValidity()) {
             name = nameInput.value;
             document.getElementById('name-title').innerText = `Username: ${name}`;
+        }
+    });
+
+    /* Hide video controls when mouse leaves the video*/
+    $(".video-and-controls").hover(function (event) {
+        if (!isFullScreen()) {
+            if (event.type === "mouseenter") {
+                $(".controls").fadeIn('fast');
+            } else if (event.type === "mouseleave") {
+                if (!player.paused) {
+                    $(".controls").fadeOut('fast');
+                }
+            }
+        }
+    });
+
+
+    /* If in fullscreen show the controls if mouse if over them */
+    $("#video-controls").hover(function (event) {
+        if (isFullScreen()) {
+            if (event.type === "mouseenter") {
+                clearInterval(hideVideoControlsTimeout);
+                hideVideoControlsTimeout = null;
+                mouseOverControls = true;
+            } else if (event.type === "mouseleave") {
+                mouseOverControls = false;
+            }
         }
     });
 
@@ -133,11 +162,6 @@ $(document).ready( (event) => {
         $('#fs').attr('data-state', !!state ? 'cancel-fullscreen' : 'go-fullscreen');
     }
 
-    // Checks if the document is currently in fullscreen mode
-    function isFullScreen () {
-        return !!(document.fullScreen || document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement || document.fullscreenElement);
-    }
-
     // Fullscreen
     function handleFullscreen () {
         // If fullscreen mode is active...	
@@ -149,6 +173,7 @@ $(document).ready( (event) => {
             else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
             else if (document.webkitCancelFullScreen) document.webkitCancelFullScreen();
             else if (document.msExitFullscreen) document.msExitFullscreen();
+            $(".video-and-controls").unbind('mousemove');
             setFullscreenData(false);
         }
         else {
@@ -160,6 +185,7 @@ $(document).ready( (event) => {
                 player.webkitRequestFullScreen();
             }
             else if (videoContainer.msRequestFullscreen) videoContainer.msRequestFullscreen();
+            $(".video-and-controls").bind('mousemove', hideControlsInFullscreen);
             setFullscreenData(true);
         }
     }
@@ -411,4 +437,33 @@ function toMovieTime(totalSeconds) {
     const minutes = Math.floor((totalSeconds / 60) - (hours * 60));
     const seconds = Math.floor(totalSeconds - (hours * 60 * 60) - (minutes * 60));
     return `${hours.toString(10).padStart(2, '0')}:${minutes.toString(10).padStart(2, '0')}:${seconds.toString(10).padStart(2, '0')}`;
+}
+
+// Checks if the document is currently in fullscreen mode
+function isFullScreen () {
+    return !!(document.fullScreen || document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement || document.fullscreenElement);
+}
+
+/*
+Show the video controls when the mouse moves in fullscreen 
+This function is bound to a mousemove event which can be triggered hundreds of
+times a second. It should be unbound when not in fullscreen, and bound when 
+entering fullscreen.
+*/
+function hideControlsInFullscreen() {
+    const player = document.getElementById("player");
+    if (isFullScreen()) {
+        if (hideVideoControlsTimeout !== null) {
+            clearTimeout(hideVideoControlsTimeout);
+            hideVideoControlsTimeout = null;
+        }
+        $(".controls").fadeIn('fast');
+        if (!mouseOverControls && !player.paused) {
+            hideVideoControlsTimeout = window.setTimeout(function () {
+                console.debug("timeout called, hiding controls");
+                $(".controls").fadeOut('fast');
+                hideVideoControlsTimeout = null;
+            }, 1500);
+        }
+    }
 }

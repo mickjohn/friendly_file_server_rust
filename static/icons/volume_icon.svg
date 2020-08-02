@@ -1,12 +1,11 @@
 <svg width="128" height="128" version="1.1" viewBox="0 0 33.867 33.867" xmlns="http://www.w3.org/2000/svg">
- <circle cx="16.933" cy="16.933" r="16.933" fill="#0084ff"/>
- <g transform="matrix(.82546 0 0 .68146 1.3187 5.4717)" fill="#fff">
+ <g transform="matrix(.97882 0 0 .98951 -2.3868 .36528)" fill="#fff">
   <rect x="12.943" y="1.5303" width="5.4625" height="30.451" ry=".8915"/>
   <rect x="2.934" y="7.9085" width="10.983" height="17.649" ry=".51671"/>
   <rect transform="matrix(.83314 -.55307 .44874 .89366 0 0)" x=".9179" y="10.772" width="9.4838" height="6.4751" ry=".50073"/>
   <rect transform="matrix(.83314 .55307 -.44874 .89366 0 0)" x="16.066" y="10.878" width="9.4838" height="6.4751" ry=".50073"/>
  </g>
- <g transform="translate(-2.4576)" fill="none" stroke="#fff">
+ <g transform="matrix(1.4492 0 0 1.301 -12.619 -5.268)" fill="none" stroke="#fff">
   <path d="m20.709 11.473c5.2352 5.536 0.14055 10.788 0.14055 10.788" stroke-width="2.187"/>
   <path d="m23.948 9.315c6.4516 7.9059 0.17319 15.406 0.17319 15.406" stroke-width="2.1819"/>
   <path d="m27.909 6.3521c6.481 10.873 0.17399 21.189 0.17399 21.189" stroke-width="2.2867"/>

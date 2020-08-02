@@ -12,6 +12,9 @@
 </head>
 
 <body>
+  <!-- https://stackoverflow.com/a/819788 -->
+  <div id="image-cache"></div>
+
   <!-- The Modal -->
   <div id="myModal" class="modal">
     <!-- Modal content -->
@@ -61,25 +64,29 @@
 
     <div class="player-window">
       <figure id="videoContainer">
-        <video id="player" preload="metadata">
-            <source src="{{ mp4_path }}" type="video/mp4">
-            Your browser does not support HTML video.
-        </video>
-        <div id="video-controls" class="controls" data-state="hidden">
-          <button id="playpause" type="button" data-state="play"></button>
-          <div class="progress">
-              <progress id="progress" value="0" min="0">
-                <span id="progress-bar"></span>
-              </progress>
-          </div>
-          <div id="timeDisplay">
-            <span id="currentTime">00:00:00</span><b id="totalTime"> / 00:00:00</b>
-          </div>
-          <button id="mute" type="button" data-state="mute"></button>
-          <button id="voldec" type="button" data-state="voldown"></button>
-          <button id="volinc" type="button" data-state="volup"></button>
-          <button id="fs" type="button" data-state="go-fullscreen"></button>
-        </div> <!-- end video controls -->
+        <div class="video-and-controls">
+          <video id="player" preload="metadata">
+              <source src="{{ mp4_path }}" type="video/mp4">
+              Your browser does not support HTML video.
+          </video>
+          <div id="video-controls" class="controls" data-state="hidden">
+            <div class="progress">
+                <progress id="progress" value="0" min="0">
+                  <span id="progress-bar"></span>
+                </progress>
+            </div> <!-- progress bar wrapper -->
+
+            <div id="video-control-buttons">
+              <button id="playpause" type="button" data-state="play"></button>
+              <button id="mute" type="button" data-state="mute"></button>
+              <button id="voldec" type="button" data-state="voldown"></button>
+              <span id="volume">100%</span>
+              <button id="volinc" type="button" data-state="volup"></button>
+              <span id="currentTime">00:00:00</span><b id="totalTime"> / 00:00:00</b>
+              <button id="fs" type="button" data-state="go-fullscreen"></button>
+            </div> <!-- end video buttons -->
+          </div> <!-- end video controls -->
+        </div> <!-- end video-and-controls -->
       </figure>
 
       <div class="side-window show-if-wwf" data-state="hidden">
