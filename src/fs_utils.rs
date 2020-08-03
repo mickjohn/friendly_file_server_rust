@@ -137,7 +137,6 @@ impl ServePoint {
         if !complete_path.exists() { return None; }
         if !complete_path.is_dir() { return None; }
 
-        let mut children = Vec::new();
         let mut dirlisting = DirectoryListing{
             path: to_uri_path(p),
             trail: self.create_trail(p),
@@ -172,12 +171,11 @@ impl ServePoint {
                 mtime: format!("{}", mtime_chrono.format("%d/%m/%Y %T")),
                 size: size.to_owned(),
             };
-            children.push(dir_entry)
+            dirlisting.children.push(dir_entry)
         }
 
         // Place directories before files
-        children.sort_by(|a, b| b.is_dir.cmp(&a.is_dir));
-        dirlisting.children = children;
+        dirlisting.children.sort_by(|a, b| b.is_dir.cmp(&a.is_dir));
         Some(dirlisting)
     }
 }
