@@ -5,6 +5,8 @@ use chrono::DateTime;
 use chrono::offset::Utc;
 
 
+const UNITS: [&str; 8] = ["B", "KB", "MB", "GB", "TB", "PB" ,"EB", "ZB"];
+
 pub struct ServePoint {
     root_path: PathBuf,
 }
@@ -135,6 +137,7 @@ impl ServePoint {
         if !complete_path.exists() { return None; }
         if !complete_path.is_dir() { return None; }
 
+        let mut children = Vec::new();
         let mut dirlisting = DirectoryListing{
             path: to_uri_path(p),
             trail: self.create_trail(p),
@@ -149,9 +152,9 @@ impl ServePoint {
             let mtime_chrono: DateTime<Utc> = mtime_sys.into();
 
             let size = if path.is_dir() {
-                "-"
+                "-".to_owned()
             } else {
-                "1 GB"
+                sizeof_fmt(meta.len())
             };
 
             let name: String = if path.is_dir() {
@@ -169,10 +172,26 @@ impl ServePoint {
                 mtime: format!("{}", mtime_chrono.format("%d/%m/%Y %T")),
                 size: size.to_owned(),
             };
-            dirlisting.children.push(dir_entry)
+            children.push(dir_entry)
         }
+
+        // Place directories before files
+        children.sort_by(|a, b| b.is_dir.cmp(&a.is_dir));
+        dirlisting.children = children;
         Some(dirlisting)
     }
+}
+
+
+fn sizeof_fmt(size: u64) -> String {
+    let mut s: f64 = size as f64;
+    for unit in &UNITS {
+        if s.abs() < 1024.0 {
+            return format!("{:.2} {}", s, unit);
+        }
+        s = s / 1024.0;
+    }
+    return format!("{:.2} {}", s, "YB");
 }
 
 #[cfg(test)]
