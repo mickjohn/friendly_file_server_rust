@@ -27,6 +27,7 @@ $(document).ready( (event) => {
     const modal = document.getElementById("myModal");
     const roomCodeInputs = document.getElementsByClassName("room-code-link");
     const copyButtons = document.getElementsByClassName("copy-to-clipboard");
+    const progressBar = document.getElementById("progress");
 
     /*******************/
     /* Event listeners */
@@ -51,7 +52,6 @@ $(document).ready( (event) => {
             }
         }
     });
-
 
     /* If in fullscreen show the controls if mouse if over them */
     $("#video-controls").hover(function (event) {
@@ -127,8 +127,11 @@ $(document).ready( (event) => {
 
     $('#progress').click(function (e) {
         if (!isGuest) {
-            var pos = (e.pageX - (this.offsetLeft + this.offsetParent.offsetLeft)) / this.offsetWidth;
-            player.currentTime = pos * player.duration;
+            const p_dimensions = progressBar.getBoundingClientRect();
+            const width = this.offsetWidth;
+            const normalisedX = e.pageX - p_dimensions.x;
+            const percentage = normalisedX / width;
+            player.currentTime = player.duration * percentage;
         }
     });
 
@@ -142,10 +145,13 @@ $(document).ready( (event) => {
     });
 
     player.addEventListener('timeupdate', (e) => {
-        $('#currentTime').text(toMovieTime(player.currentTime));
+        $('#progress').attr('max', player.duration);
         $('#progress').val(player.currentTime);
-        const width = Math.floor((player.currentTime / player.duration) * 100) + '%';
-        $('#progress-bar').css('width', width);
+        $('#totalTime').text(' / ' + toMovieTime(player.duration));
+        $('#currentTime').text(toMovieTime(player.currentTime));
+
+        // const width = Math.floor((player.currentTime / player.duration) * 100) + '%';
+        // $('#progress-bar').css('width', width);
     });
 
     player.addEventListener('suspend', function() {
