@@ -76,6 +76,24 @@ $(document).ready( (event) => {
 
     $('#video-controls').attr("data-state", "visible");
 
+    $('#voldec').click( () => {
+        if (player.volume <= 0.1 ) {
+            player.volume = 0;
+        } else {
+            player.volume = player.volume - 0.1;
+        }
+        $('#volume').text(`${Math.floor(player.volume * 100)}%`);
+    });
+
+    $('#volinc').click( () => {
+        if (player.volume >= 0.9 ) {
+            player.volume = 1;
+        } else {
+            player.volume = player.volume + 0.1;
+        }
+        $('#volume').text(`${Math.floor(player.volume * 100)}%`);
+    });
+
 
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function (event) {
