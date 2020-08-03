@@ -394,17 +394,20 @@ figure[data-fullscreen=true]>.video-and-controls {
     width: 100%;
 }
 
-#image-cache {
+/*
+Preload the SVG button images
+*/
+#image-preload {
     width: 0px;
     height: 0px;
     display: inline;
-    background-image: url('/static/icons/play_icon.svg');
-    background-image: url('/static/icons/pause_icon.svg');
-    background-image: url('/static/icons/volume_icon.svg');
-    background-image: url('/static/icons/volume_muted.svg');
-    background-image: url('/static/icons/volume_up.svg');
-    background-image: url('/static/icons/volume_down.svg');
-    background-image: url('/static/icons/fullscreen.svg');
-    background-image: url('/static/icons/exit_fullscreen.svg');
-    background-image: url();
+    background-image: url('/static/icons/play_icon.svg'),
+    url('/static/icons/pause_icon.svg'),
+    url('/static/icons/volume_icon.svg'),
+    url('/static/icons/volume_muted.svg'),
+    url('/static/icons/volume_up.svg'),
+    url('/static/icons/volume_down.svg'),
+    url('/static/icons/fullscreen.svg'),
+    url('/static/icons/exit_fullscreen.svg'),
+    url();
 }
