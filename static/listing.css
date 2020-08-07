@@ -6,6 +6,16 @@ body {
     max-width: 80%;
 }
 
+a, a:visited {
+    color: #555;
+    text-decoration: none;
+}
+
+a:hover {
+    color: rgb(77, 154, 216);
+    text-decoration: underline;
+}
+
 .content {
     background-color: #fff;
     border-radius: 6px;
@@ -21,13 +31,12 @@ body {
 .path {
     font-size: 25px;
     font-weight: bold;
-    text-align: center;
-    padding-bottom: 40px;
+    padding-left: 10px;
 }
 
 table {
     border-collapse: collapse;
-    width: 95%;
+    width: 100%;
     margin: 0 auto;
 }
 

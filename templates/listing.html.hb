@@ -13,7 +13,7 @@
    <div class="content">
     <h1>Friendly File Server</h1>
     <div class="path">
-      Index of <a href="/browse/">root /</a>
+      <span id="crumbtrail">Index of <a href="/browse/">root /</a></span>
 
       {{#each listing.trail }}
       <a href="/browse/{{ urlencode this.[0] }}/">
@@ -24,10 +24,9 @@
 
     <table>
       <tr>
-        <th> Icon </th>
-        <th> Name </th>
-        <th> Size </th>
+        <th colspan="2"> Name </th>
         <th> Modified </th>
+        <th> Size </th>
       </tr>
 
       {{#each listing.children as | child |}}
@@ -55,15 +54,16 @@
             (click here to stream)
           </a>
           {{/if }}
-
         </td>
+
+        <td> {{ child.mtime }} </td>
+
         {{#if child.is_dir }}
         <td> - </td>
         {{ else }}
         <td> {{ child.size }} </td>
         {{/if }}        
         
-        <td> {{ child.mtime }} </td>
       </tr>            
       {{/each}}
     </table>

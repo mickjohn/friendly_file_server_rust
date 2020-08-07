@@ -168,7 +168,7 @@ impl ServePoint {
                 name: name,
                 is_file: path.is_file(),
                 is_dir: path.is_dir(),
-                mtime: format!("{}", mtime_chrono.format("%d/%m/%Y %T")),
+                mtime: format!("{}", mtime_chrono.format("%d/%m/%Y %H:%M")),
                 size: size.to_owned(),
             };
             dirlisting.children.push(dir_entry)
