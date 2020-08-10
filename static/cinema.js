@@ -52,6 +52,10 @@ $(document).ready( (event) => {
             }
         }
 
+        /* Show the exit button, and hide the watch-with-friends button */
+        $('#exit-wwf').show();
+        $('#show-cinema-info').hide();
+
         if (reenableAsDirector) {
             console.debug("Restoring this user as director");
             enableDirectorMode();
