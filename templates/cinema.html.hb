@@ -38,31 +38,6 @@
 
    <div class="content">
     <h1>Mickflix</h1>
-    <div class="show-if-director help-box" data-state="hidden">
-      <h4>How to use</h4>
-      <p>
-        When you clicked on the 'Create a room' button a virtual room was
-        created on the server. When people click on the URL that you give them
-        they will join this virtual room. All of the people in this room will
-        be sent your media player controls. When you click play, it will click
-        play on their browsers, when you seek it will seek on their browsers,
-        and etc. If you close or refresh this page, you will need to create a
-        new room.
-      </p>
-    </div>
-
-    <div class="show-if-guest" data-state="hidden">
-      <h4>How to use</h4>
-      <p>
-      When the director (i.e., the person who send you the link through which
-      you joined), presses play in their browser, your video will start 
-      playing. When they seek, your video will also seek. When they pause, your
-      video will pause. This control isn't bi-directonal, when you play, pause
-      or seek, you will only be doing it for your video.
-      </p>
-    </div>
-    
-    <button id="show-cinema-info">Watch together with your friends</button>
 
     <div class="player-window">
       <figure id="videoContainer">
@@ -109,8 +84,37 @@
           </tr>
         </table>
       </div> <!-- end side-window -->
-    </div>
-  </div>
+    </div> <!-- end player window -->
+
+    <div class="video-information"> <!-- watch with friends buttons & info -->
+      <h2>{{ mp4_name }}</h2>
+      <button id="show-cinema-info">Watch together with your friends</button>
+      <button id="exit-wwf">Exit watch with friends mode</button>
+      <div class="show-if-director help-box" data-state="hidden">
+        <h4>How to use</h4>
+        <p>
+          When you clicked on the 'Create a room' button a virtual room was
+          created on the server. When people click on the URL that you give them
+          they will join this virtual room. All of the people in this room will
+          be sent your media player controls. When you click play, it will click
+          play on their browsers, when you seek it will seek on their browsers,
+          and etc. If you close or refresh this page, you will need to create a
+          new room.
+        </p>
+      </div> <!-- End how to use (director) -->
+
+      <div class="show-if-guest" data-state="hidden">
+        <h4>How to use</h4>
+        <p>
+        When the director (i.e., the person who send you the link through which
+        you joined), presses play in their browser, your video will start 
+        playing. When they seek, your video will also seek. When they pause, your
+        video will pause. This control isn't bi-directonal, when you play, pause
+        or seek, you will only be doing it for your video.
+        </p>
+      </div> <!-- End how to use (guest) -->
+    </div> <!-- End watch with friends buttons & info -->
+  </div> <!-- End Content -->
 </body>
 
 </html>

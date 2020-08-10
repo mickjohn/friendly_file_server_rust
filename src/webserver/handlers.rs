@@ -52,8 +52,11 @@ pub async fn render_cinema<'a>(_: Authenticated, sp: Sp, hba: Hba<'a>, fp: warp:
         return Err(warp::reject())
     }
 
+    let file_name = path.file_name().unwrap().to_str().unwrap();
+
     let mut data = HashMap::new();
-    data.insert("mp4_path", path_str);
+    data.insert("mp4_path", path_str.as_str());
+    data.insert("mp4_name", file_name);
 
     let render = hba.hba.lock().await
         .render("cinema.html", &data)

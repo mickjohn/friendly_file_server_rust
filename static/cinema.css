@@ -1,17 +1,19 @@
 body {
-    color: #555;
+    color: #e5e9f0;
     font-family: "Helvetica", "Arial", sans-serif;
-    background-image: linear-gradient(90deg, #bfc2be 33.33%, #ffffff 33.33%, #ffffff 50%, #bfc2be 50%, #bfc2be 83.33%, #ffffff 83.33%, #ffffff 100%);
+    background-color: #2e3440;
     background-size: 120.00px 120.00px;
-}
-
-.content {
-    margin: 20px 30px;
+    padding: 0;
+    margin: 0;
 }
 
 .content h1 {
     text-align: center;
-    color: rgb(35, 64, 161);
+    color: #bf616a;
+}
+
+.video-information {
+    padding: 30px 20px;
 }
 
 td, th {
@@ -26,26 +28,20 @@ td, th {
 
 .player-window {
     display: flex;
-    border-radius: 30px;
     background-color: black;
-    /*! align-items: center; */
 }
 
 .side-window {
-    background-color: #404040;
-    color: #f4f4f4;
-    border-top-right-radius: 30px;
-    border-bottom-right-radius: 30px;
+    background-color: #e5e9f0;
     padding: 8px;
     max-width: 15%;
     min-width: 235px;
+    color: #3b4252;
 }
 
 #videoContainer {
-    max-width: 100%;
     margin: 10px auto;
     padding: 0 0 0 10px;
-    min-width: 70%;
 }
 
 video {
@@ -56,12 +52,25 @@ video {
 }
 
 #show-cinema-info {
+    color: #e5e9f0;
+    font-size: 16px;
+    padding: 1em 2em 1em 2em;
+    border: none;
+    margin: 10px;
+    background-color: #81a1c1;
+    cursor: pointer;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+#exit-wwf {
+    display: none;
     color: white;
     font-size: 18px;
     padding: 1em 2em 1em 2em;
     border: none;
     margin: 10px;
-    background-image: linear-gradient(to right top, #de4848, #e03d4d, #e22f54, #e31f5b, #e30063);
+    background-color: #e03d4d;
     cursor: pointer;
     border-radius: 10px;
 }
@@ -95,9 +104,7 @@ video {
 /* Modal Content/Box */
 
 .modal-content {
-    background-color: #fff7d8;
-    border: 3px solid #ffcc34;
-    border-radius: 20px;
+    background-color: #ebcb8b;
     margin: 15% auto;
     padding: 20px;
     width: 80%;
@@ -123,27 +130,25 @@ video {
 
 .help-box {
     width: 80%;
-    background-color: #404040;
+    background-color: #3b4252;
     border-radius: 20px;
-    color: #e1e1e1;
     padding: 10px;
     margin: 0 auto;
 }
 
 #create-room {
     display: block;
-    color: white;
+    color: #2d2d2d;
     font-size: 18px;
     padding: 9px;
     border: none;
     margin: 10px auto;
-    background-color: rgb(16, 95, 16);
     cursor: pointer;
-    border-radius: 6px;
+    background-color: #a3be8c;
 }
 
 #create-room:hover {
-    background-color: rgb(37, 131, 37);
+    background-color: #788c67;
 }
 
 .copy-to-clipboard {
@@ -151,8 +156,8 @@ video {
     font-size: 18px;
     padding: 7px;
     border: none;
-    background-color: rgb(58, 97, 148);
     cursor: pointer;
+    background-color: #81a1c1;
 }
 
 .copy-to-clipboard:hover {

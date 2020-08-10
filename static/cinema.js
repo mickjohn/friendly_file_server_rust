@@ -4,22 +4,6 @@ var mouseOverControls = false;
 
 // window.addEventListener('load', (event) => {
 $(document).ready( (event) => {
-    /* More Global Vars */
-    var socket = null;
-    var name = "user";
-    var roomCode = null;
-    var justJoined = true;
-    var isDirector = false;
-    var isGuest = false;
-    var statsInterval = null;
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('room') !== null) {
-        roomCode = urlParams.get('room');
-        initialiseWebsocket(roomCode);
-        enableGuestMode();
-        initSideWindow(roomCode, false);
-    }
-
     /************/
     /* Elements */
     /************/
@@ -29,6 +13,58 @@ $(document).ready( (event) => {
     const copyButtons = document.getElementsByClassName("copy-to-clipboard");
     const progressBar = document.getElementById("progress");
 
+
+    /* More Global Vars */
+    var socket = null;
+    var localStorageName = window.localStorage.getItem("username");
+
+    // Fetch the username from localStorage if it's set, and update the page
+    var name = localStorageName === null ? 'user' : localStorageName;
+    document.getElementById('name-title').innerText = `Username: ${name}`;
+
+    var roomCode = null;
+    var justJoined = true;
+    var isDirector = false;
+    var isGuest = false;
+    var statsInterval = null;
+
+    /*
+    Check the URL & local storage for watch-with-friends related query params.
+    Use this info to re-enable watch-with-friends mode after it the page has
+    been refreshed.
+    */
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('room') !== null) {
+        roomCode = urlParams.get('room');
+        initialiseWebsocket(roomCode);
+        var reenableAsDirector = false;
+
+        var storedRoom = JSON.parse(localStorage.getItem('room'));
+        if (storedRoom !== null) {
+            console.debug("Found stored room..");
+            var storedRoomCode = storedRoom.roomCode;
+            var storedIsDirector = storedRoom.isDirector;
+            // Restore this user to director
+            if (storedRoomCode === roomCode && storedIsDirector) {
+                reenableAsDirector = true;
+            } else {
+                localStorage.removeItem('room');
+            }
+        }
+
+        if (reenableAsDirector) {
+            console.debug("Restoring this user as director");
+            enableDirectorMode();
+        } else {
+            console.debug("This user is a guest");
+            enableGuestMode();
+        }
+
+        initSideWindow(roomCode, false);
+    }
+
+
+
     /*******************/
     /* Event listeners */
     /*******************/
@@ -36,6 +72,7 @@ $(document).ready( (event) => {
         const nameInput = document.getElementById("name-input");
         if (nameInput.checkValidity()) {
             name = nameInput.value;
+            window.localStorage.setItem('username', name);
             document.getElementById('name-title').innerText = `Username: ${name}`;
         }
     });
@@ -286,6 +323,8 @@ $(document).ready( (event) => {
                     initialiseWebsocket(roomCode);
                     enableDirectorMode()
                     initSideWindow(roomCode, isDirector);
+                    $('#exit-wwf').show();
+                    $('#show-cinema-info').hide();
                 } else {
                     alert('There was a problem with the request.');
                 }
@@ -293,6 +332,32 @@ $(document).ready( (event) => {
         };
         httpRequest.open('GET', url, true);
         httpRequest.send();
+    });
+
+    $("#exit-wwf").click(function() {
+        // Show the watch with friends button again
+        $('#show-cinema-info').show();
+
+        // Hide the side window
+        hideSideWindow();
+
+        // Remove room code from url
+        const url = `${window.location.origin}${window.location.pathname}?cinema=1`;
+        history.replaceState('', '', url);
+
+        // Delete localstorage
+        window.localStorage.removeItem('room');
+
+        // Close the websocket
+        if (socket !== null) {
+            socket.close();
+        }
+
+        // Clear the usernames from the table
+        clearAllRows();
+
+        // Finally, hide this button!
+        $(this).hide();
     });
 
     /*
@@ -354,7 +419,18 @@ $(document).ready( (event) => {
     function enableDirectorMode() {
         // Set global vars
         isDirector = true;
-        name = "director";
+
+        // Add the room code as a query param to the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('room') === null) {
+            const newUrl = `${window.location.href}&room=${roomCode}`; 
+            window.history.replaceState('', '', newUrl);
+        }
+
+        // Store room code and isDirector in local storage. This can be used
+        // If the director refreshes the page.
+        const objToStore = JSON.stringify({'roomCode': roomCode, 'isDirector': isDirector});
+        localStorage.setItem('room', objToStore);
 
         // Update elements that should be visible to the director
         const directorElements = document.getElementsByClassName('show-if-director');
@@ -395,6 +471,14 @@ $(document).ready( (event) => {
         $("#room-code-box-side-window").text(createWwfUrl(roomCode));
         $(".show-if-wwf").attr("data-state", "visible");
         $(".room-code-link").val(url);
+    }
+
+    function hideSideWindow() {
+        $("#room-code-box").hide()
+        $("#room-code-box-side-window").text('');
+        $(".show-if-wwf").attr("data-state", "hidden");
+        $(".show-if-director").attr("data-state", "hidden");
+        $(".room-code-link").val('');
     }
 
     function sendStats() {
