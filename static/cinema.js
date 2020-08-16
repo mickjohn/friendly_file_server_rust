@@ -14,6 +14,13 @@ $(document).ready( (event) => {
     const progressBar = document.getElementById("progress");
 
 
+    //////////////////////////////////////////// DEBUG
+    // setInterval(function() {
+    //     console.log(player.readyState);
+    // }, 500);
+    //////////////////////////////////////////// END DEBUG
+
+
     /* More Global Vars */
     var socket = null;
     var localStorageName = window.localStorage.getItem("username");
@@ -208,9 +215,6 @@ $(document).ready( (event) => {
         $('#progress').val(player.currentTime);
         $('#totalTime').text(' / ' + toMovieTime(player.duration));
         $('#currentTime').text(toMovieTime(player.currentTime));
-
-        // const width = Math.floor((player.currentTime / player.duration) * 100) + '%';
-        // $('#progress-bar').css('width', width);
     });
 
     player.addEventListener('suspend', function() {
@@ -283,6 +287,18 @@ $(document).ready( (event) => {
         const name = data['name'];
         const time = data['time'];
         const id = data['id'];
+        const player_state = data['player_state'];
+
+        var state;
+        if (player_state == 'Playing') {
+                state = "[Playing]";
+        } else if (player_state == 'Paused') {
+                state = "[Paused]";
+        } else if (player_state == 'Loading') {
+                state = "[Loading]";
+        } else {
+            state = "[?]";
+        }
 
         if (justJoined && time != '0') {
             justJoined = false;
@@ -303,7 +319,7 @@ $(document).ready( (event) => {
         var cell1 = newRow.insertCell(0);
         var cell2 = newRow.insertCell(1);
 
-        cell1.innerText = name;
+        cell1.innerText = `${state} ${name}`;
         cell2.innerText = toNiceTime(time);
     }
 
@@ -487,8 +503,22 @@ $(document).ready( (event) => {
 
     function sendStats() {
         if (socket !== null && socket.readyState === WebSocket.OPEN) {
+            var state;
+            if (player.readyState < 4) {
+                state = "Loading";
+            } else if (player.paused) {
+                state = "Paused";
+            } else {
+                state = "Playing";
+            }
+
             const time = player.currentTime;
-            const data = { name: name, type: 'Stats', time: time };
+            const data = {
+                name: name,
+                type: 'Stats',
+                time: time,
+                player_state: state
+            };
             socket.send(JSON.stringify(data));
         }
     }
@@ -537,8 +567,8 @@ Turn a float of seconds into a human friendly "00h 00h 00.0s" string
 function toNiceTime(totalSeconds) {
     const hours = Math.floor(totalSeconds / (60 * 60))
     const minutes = Math.floor((totalSeconds / 60) - (hours * 60));
-    const seconds = (totalSeconds - (hours * 60 * 60) - (minutes * 60)).toFixed(1);
-    return `${hours.toString(10).padStart(2, '0')}h ${minutes.toString(10).padStart(2, '0')}m ${seconds.toString(10).padStart(4, '0')}s`;
+    const seconds = Math.floor((totalSeconds - (hours * 60 * 60) - (minutes * 60)));
+    return `${hours.toString(10).padStart(2, '0')}h ${minutes.toString(10).padStart(2, '0')}m ${seconds.toString(10).padStart(2, '0')}s`;
 } 
 
 /*

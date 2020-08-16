@@ -93,9 +93,9 @@ async fn user_msg_recieved(my_id: usize, code: String, msg: warp::filters::ws::M
                 },
 
                 // Return the Stats message with the ID added
-                Messages::Stats{name: n, time: t} => {
+                Messages::Stats{name: n, time: t, player_state: p} => {
                     for user in room.users_by_id.values() {
-                        let resp = Messages::StatsResponse{name: &n, time: t, id: my_id};
+                        let resp = Messages::StatsResponse{name: &n, time: t, id: my_id, player_state: p.clone()};
                         let resp_str = serde_json::to_string(&resp).unwrap();
                         let tx = &user.sender;
                         let _ = tx.send(Ok(Message::text(&resp_str)));

@@ -106,11 +106,11 @@
       <div class="show-if-guest" data-state="hidden">
         <h4>How to use</h4>
         <p>
-        When the director (i.e., the person who send you the link through which
-        you joined), presses play in their browser, your video will start 
-        playing. When they seek, your video will also seek. When they pause, your
-        video will pause. This control isn't bi-directonal, when you play, pause
-        or seek, you will only be doing it for your video.
+          When the director (i.e., the person who send you the link through which
+          you joined), presses play in their browser, your video will start
+          playing. When they seek, your video will also seek. When they pause, your
+          video will pause. This control isn't bi-directonal, when you play, pause
+          or seek, you will only be doing it for your video.
         </p>
       </div> <!-- End how to use (guest) -->
     </div> <!-- End watch with friends buttons & info -->
