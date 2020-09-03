@@ -1,9 +1,9 @@
 body {
-    background-color: #c5c5c5;
+    background-color: #fff;
     color: #555;
     font-family: "Helvetica", "Arial", sans-serif;
-    margin: 0 auto;
     max-width: 80%;
+    margin: 0 auto;
 }
 
 a, a:visited {
@@ -18,42 +18,77 @@ a:hover {
 
 .content {
     background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 6px 8px 5px #a6a6a6;
     margin: 20px 0;
 }
 
-.content h1 {
-    text-align: center;
-    border-bottom: 1px solid gray;
+.small-screen-only {
+    display: none;
+}
+
+.directory a {
+    font-weight: bold;
+}
+
+.file img, .directory img {
+    padding-right: 10px;
+    height: 24px;
+    margin-bottom: -5px;
 }
 
 .path {
-    font-size: 25px;
+    font-size: 35px;
     font-weight: bold;
     padding-left: 10px;
+    margin: 15px;
 }
 
 table {
     border-collapse: collapse;
     width: 100%;
     margin: 0 auto;
+    border-radius: 11px;
+    border: 2px solid #ddd;
+}
+
+td {
+    word-wrap: break-word;
+    vertical-align: middle;
+    padding: 12px;
 }
 
 td, th {
-    border-bottom: 1px solid #dddddd;
-    padding: 3px;
-}
-  
-tr {
-/*     margin: 0 10px 0 10px; */
+    border-bottom: 1px solid #ddd;
 }
 
 tr:hover {
-    background-color: #dddddd;
-    /* padding: 10px; */
+    background-color: #ddd;
 }
 
 .cinema {
     font-size: 20px;
+}
+
+@media only screen and (max-width: 560px), (min-device-width: 300px) and (max-device-width: 1024px) {
+    body {
+        max-width: 95%;
+        font-size: 1.5em;
+    }
+
+    table img {
+        height: 35px;
+    }
+
+    .size, .mtime {
+        display: none;
+    }
+
+    .small-screen-only {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        font-size: 80%;
+        padding-top: 5px;
+        font-style: italic;
+    }
+
 }
