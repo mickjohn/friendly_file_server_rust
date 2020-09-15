@@ -1,0 +1,8 @@
+<svg width="128" height="128" version="1.1" viewBox="0 0 33.867 33.867" xmlns="http://www.w3.org/2000/svg">
+ <g transform="matrix(1.1693 0 0 1.1693 -2.7418 -2.9343)" fill="#fff" stroke-width="1.1322">
+  <path transform="rotate(-45,8.5664,8.7257)" d="m8.5664 0.15484 7.4226 12.856h-14.845z"/>
+  <path transform="rotate(45,33.401,17.145)" d="m21.595 8.4733 7.4226 12.856h-14.845z"/>
+  <path transform="rotate(225 9.339 25.165)" d="m9.8015 15.964 7.4226 12.856h-14.845z"/>
+  <path transform="rotate(135,22.897,27.658)" d="m19.643 19.191 7.4226 12.856-14.845-1e-6z"/>
+ </g>
+</svg>
