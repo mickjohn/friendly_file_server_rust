@@ -11,45 +11,25 @@ import ExitFullScreenIcon from '../icons/exit_fullscreen.svg';
 import VolumeMutedIcon from '../icons/volume_muted.svg';
 import VolumeIcon from '../icons/volume_icon.svg';
 
-class Props {
+interface Props {
     source: string;
     playing: boolean;
     onPlay?: () => void;
     onPause?: () => void;
     onSeek?: () => void;
     onTimeUpdate?: () => void;
-
-    constructor(
-        source: string,
-        playing = true,
-    ) {
-        this.source = source;
-        this.playing = playing;
-    }
 }
 
-class State {
+interface State {
     playing: boolean;
     volume: number;
     fullscreen: boolean;
     currentTime: number;
     duration: number;
-
-    constructor(
-        playing: boolean,
-        volume: number,
-        fullscreen: boolean,
-        currentTime: number,
-        duration: number,
-    ) {
-        this.playing = false;
-        this.volume = volume;
-        this.fullscreen = fullscreen;
-        this.currentTime = currentTime;
-        this.duration = duration;
-    }
-
+    showControls: boolean;
 }
+
+const HIDE_CONTROLS_TIMEOUT = 1200;
 
 function toMovieTime(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / (60 * 60))
@@ -61,39 +41,29 @@ function toMovieTime(totalSeconds: number): string {
 class VideoPlayer extends React.Component<Props, State> {
 
     videoRef: React.RefObject<HTMLVideoElement>;
+    figureRef: React.RefObject<any>;
+    hideControlsTimeout: number | undefined;
     lastVolume: number;
+    mouseOverControls: boolean;
 
     constructor(props: Props) {
         super(props);
         this.videoRef = React.createRef();
+        this.figureRef = React.createRef();
         this.lastVolume = 1.0;
+        this.hideControlsTimeout = undefined;
+        this.mouseOverControls = false;
         this.state = {
             playing: props.playing,
             volume: 1.0,
             fullscreen: false,
             currentTime: 0,
             duration: 0,
+            showControls: true,
         };
     }
 
-    componentDidMount() {
-        const videoElem = this.videoRef.current;
-        if (videoElem !== null) {
-            videoElem.addEventListener('play', () => this.setState({ playing: true }));
-            videoElem.addEventListener('pause', () => this.setState({ playing: false }));
 
-            videoElem.addEventListener('volumechange', () => this.setState({ volume: videoElem.volume }));
-            videoElem.addEventListener('loadedmetadata', () => this.setState({ duration: videoElem.duration }));
-            videoElem.addEventListener('timeupdate', () => this.setState({ currentTime: videoElem.currentTime }));
-
-            console.log(`playing state = ${this.state.playing}`);
-            if (this.state.playing) {
-                videoElem.play();
-            } else {
-                videoElem.pause();
-            }
-        }
-    }
 
     onPlayClicked() {
         // If a handler was supplied then use it.
@@ -117,34 +87,94 @@ class VideoPlayer extends React.Component<Props, State> {
 
 
     getPlayPauseButton() {
-        if (this.state.playing) {
-            return (
-                <button id="playpause" onClick={() => this.onPauseClicked()} >
-                    <img alt="Pause" src={PauseIcon} />
-                </button>
-            );
-        } else {
-            return (
-                <button id="playpause" onClick={() => this.onPlayClicked()} >
-                    <img alt="Play" src={PlayIcon} />
-                </button>
-            );
-        }
+        const playing = this.state.playing;
+        const btn_conf = {
+            alt: playing ? 'Pause': 'Play',
+            src: playing ? PauseIcon : PlayIcon,
+        };
+
+        return (
+            <button id="playpause" onClick={() => {playing ? this.onPauseClicked() : this.onPlayClicked()}}>
+                <img alt={btn_conf.alt} src={btn_conf.src}/>
+            </button>
+        );
     }
 
     getVolumeButton() {
-        if (this.videoRef.current && this.videoRef.current.volume === 0) {
-            return (
-                <button onClick={() => this.setVolume(this.lastVolume)}>
-                    <img src={VolumeMutedIcon} alt="unmute" />
-                </button>
-            );
-        } else {
-            return (
-                <button onClick={() => this.setVolume(0)}>
-                    <img src={VolumeIcon} alt="mute" />
-                </button>
-            );
+        const muted = this.videoRef.current && this.videoRef.current.volume === 0;
+        const vol = muted ? this.lastVolume : 0;
+        const icon = muted ? VolumeMutedIcon : VolumeIcon;
+
+        return (
+            <button onClick={() => this.setVolume(vol)}>
+                <img src={icon} alt="unmute" />
+            </button>
+        );
+    }
+
+    getFullscreenButton() {
+        const fullscreen = this.state.fullscreen;
+        const icon = fullscreen ? ExitFullScreenIcon : FullScreenIcon;
+        const alt = fullscreen ? "Exit Fullsceen" : "Enter Fullscreen";
+
+        return (
+            <button id="fullscreen">
+                <img
+                    src={icon}
+                    alt={alt}
+                    onClick={() => this.handleFullscreen()}
+                />
+            </button>
+        );
+    }
+
+    getControls() {
+        return (
+            <div
+                className="controls"
+                onMouseEnter={ () => this.mouseOverControls = true }
+                onMouseLeave={ () => this.mouseOverControls = false }
+            >
+                <ProgressBar
+                    max={this.state.duration}
+                    value={this.state.currentTime}
+                    onClick={(p) => this.setCurrentTime(p)}
+                    progressBarClass={"video-progress"}
+                />
+
+                <div>
+                    {this.getPlayPauseButton()}
+                    {this.getVolumeButton()}
+
+                    {/* The volume slider */}
+                    <ProgressBar
+                        max={1}
+                        value={this.state.volume}
+                        progressBarClass="volume-slider"
+                        onClick={(p) => this.setVolume(p)}
+                    />
+                    <span>{toMovieTime(this.state.currentTime)} / {toMovieTime(this.state.duration)}</span>
+                    {this.getFullscreenButton()}
+                </div>
+            </div>
+        );
+    }
+
+    hideControlsInFullscreen() {
+        if (this.state.fullscreen) {
+            if (this.hideControlsTimeout !== undefined) {
+                clearTimeout(this.hideControlsTimeout);
+                this.hideControlsTimeout= undefined;
+                this.setState({showControls: true});
+            }
+
+            if (!this.mouseOverControls && this.state.playing) {
+                this.hideControlsTimeout = window.setTimeout(() => {
+                    console.debug("timeout called, hiding controls");
+                    this.setState({showControls: false});
+                    this.hideControlsTimeout = undefined;
+                }, HIDE_CONTROLS_TIMEOUT);
+            }
         }
     }
 
@@ -168,6 +198,49 @@ class VideoPlayer extends React.Component<Props, State> {
         }
     }
 
+    /* Enter or exit fullscreen */
+    handleFullscreen() {
+        if (this.state.fullscreen) {
+            if (document.exitFullscreen) {
+                clearTimeout(this.hideControlsTimeout);
+                this.hideControlsTimeout = undefined;
+                document.exitFullscreen();
+                this.setState({ fullscreen: false, showControls: true });
+            }
+        }
+        else {
+            if (this.figureRef.current) {
+                this.figureRef.current.requestFullscreen()
+                this.setState({ fullscreen: true, showControls: true });
+            }
+        }
+    }
+
+
+    /* When the component is mounted add all of the listeners to the video and figure elements */
+    componentDidMount() {
+        const videoElem = this.videoRef.current;
+        if (videoElem !== null) {
+            videoElem.addEventListener('play', () => this.setState({ playing: true }));
+            videoElem.addEventListener('pause', () => this.setState({ playing: false }));
+            videoElem.addEventListener('volumechange', () => this.setState({ volume: videoElem.volume }));
+            videoElem.addEventListener('loadedmetadata', () => this.setState({ duration: videoElem.duration }));
+            videoElem.addEventListener('timeupdate', () => this.setState({ currentTime: videoElem.currentTime }));
+
+            if (this.state.playing) {
+                videoElem.play();
+            } else {
+                videoElem.pause();
+            }
+        }
+
+        /* IT's actually the figure element that goes fullscreen, not the video */
+        const figElem = this.figureRef.current;
+        if (figElem !== null) {
+            figElem.addEventListener('fullscreenchange', () => this.setState({ fullscreen: document.fullscreenElement !== null }));
+        }
+
+    }
 
     // Check if the props have updated. If the playing prop has changed then act accordingly
     componentDidUpdate(prevProps: Props) {
@@ -183,39 +256,33 @@ class VideoPlayer extends React.Component<Props, State> {
         }
     }
 
+
     render() {
+        let fullscreen_class = this.state.fullscreen ? "video-container-fullscreen" : ""
+        const controls = this.state.showControls ? this.getControls() : null;
+
+        const mouseEnter = () => {
+            if (!this.state.fullscreen) this.setState({showControls: true});
+        }
+
+        const mouseLeave = () => {
+            if (!this.state.fullscreen && this.state.playing) this.setState({showControls: false});
+        }
+
         return (
-            <div className="video-container">
-                <figure>
-                    <div className="video-and-controls">
+            <div className={`video-container ${fullscreen_class}`}>
+                <figure ref={this.figureRef} >
+                    <div
+                        className="video-and-controls"
+                        onMouseMove={(e) => { this.hideControlsInFullscreen() }}
+                        onMouseEnter={() => {mouseEnter()}}
+                        onMouseLeave={() => {mouseLeave()}}
+                    >
                         <video ref={this.videoRef} preload="metadata">
                             <source src={this.props.source} type="video/mp4" />
                             Your browser does not support HTML video.
                         </video>
-
-                        <div className="controls">
-                            <ProgressBar
-                                max={this.state.duration}
-                                value={this.state.currentTime}
-                                onClick={(p) => this.setCurrentTime(p)}
-                                progressBarClass={"video-progress"}
-                            />
-
-                            <div>
-                                {this.getPlayPauseButton()}
-                                {this.getVolumeButton()}
-
-                                {/* The volume slider */}
-                                <ProgressBar
-                                    max={1}
-                                    value={this.state.volume}
-                                    progressBarClass="volume-slider"
-                                    onClick={(p) => this.setVolume(p)}
-                                />
-                                <span>{toMovieTime(this.state.currentTime)} / {toMovieTime(this.state.duration)}</span>
-                                <button id="fullscreen"><img src={FullScreenIcon} alt="Enter Fullscreen" /></button>
-                            </div>
-                        </div>
+                        {controls}
                     </div>
                 </figure>
             </div>
