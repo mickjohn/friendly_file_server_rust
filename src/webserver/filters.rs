@@ -1,7 +1,7 @@
 use crate::verify;
 use super::handlers;
 use super::rejections;
-use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery};
+use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery, RoomCleaner};
 
 use warp::Filter;
 use warp::http::StatusCode;
@@ -94,9 +94,14 @@ pub fn with_rooms(rooms: Rooms) -> impl Filter<Extract = (Rooms,), Error = std::
     warp::any().map(move || rooms.clone())
 }
 
+pub fn with_room_cleaner(cleaner: RoomCleaner) -> impl Filter<Extract = (RoomCleaner,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || cleaner.clone())
+}
+
 fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || urls.clone())
 }
+
 
 pub fn auth(users: UserMap) -> impl Filter<Extract = (Authenticated,), Error = warp::Rejection> + Clone {
     warp::header::<String>("Authorization")

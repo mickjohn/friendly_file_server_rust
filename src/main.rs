@@ -20,10 +20,11 @@ mod webserver;
 
 use crate::webserver::{models, filters, websocket};
 
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "info");
+        env::set_var("RUST_LOG", "friendly_file_server_rust=debug");
     }
     pretty_env_logger::init();
 
@@ -38,6 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let hba = models::new_handlebars_arc();
     let users = models::new_users(config.users.clone());
     let rooms = models::Rooms::default();
+    let room_cleaner = models::new_room_cleaner();
     let urls = models::Urls::default();
 
 
@@ -71,8 +73,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .and(warp::path::end())
                     .and(warp::ws())
                     .and(filters::with_rooms(rooms))
-                    .map(|code: String, ws: warp::ws::Ws, rooms: models::Rooms| {
-                        ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms))
+                    .and(filters::with_room_cleaner(room_cleaner))
+                    .map(|code: String, ws: warp::ws::Ws, rooms: models::Rooms, cleaner: models::RoomCleaner| {
+                        ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms, cleaner))
                     });
 
     // Redirect index to browse endpoint
