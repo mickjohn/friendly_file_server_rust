@@ -1,4 +1,4 @@
-use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery};
+use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery, RoomCodeQuery};
 use super::filters::Authenticated;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -96,6 +96,21 @@ pub async fn create_room(_: Authenticated, rooms: Rooms, urls: Urls, b64url: Url
 
     let mut resp_map = HashMap::new();
     resp_map.insert("room", code);
+    Ok(warp::reply::json(&resp_map))
+}
+
+pub async fn check_room(_: Authenticated, rooms: Rooms, room_code: RoomCodeQuery) -> Result<impl warp::Reply, warp::Rejection> {
+    use std::str::from_utf8;
+    let decoded = decode(room_code.room.as_bytes()).map_err(|_| warp::reject())?;
+    let room = from_utf8(decoded.as_slice()).map_err(|_| warp::reject())?;
+
+    let mut resp_map = HashMap::new();
+    let rooms = rooms.lock().await;
+    if rooms.contains_key(&(room.to_owned())) {
+        resp_map.insert("exists", true);
+    } else {
+        resp_map.insert("exists", false);
+    }
     Ok(warp::reply::json(&resp_map))
 }
 

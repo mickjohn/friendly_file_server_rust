@@ -14,6 +14,11 @@ pub struct UrlQuery {
     pub url: String,
 }
 
+#[derive(Deserialize)]
+pub struct RoomCodeQuery {
+    pub room: String,
+}
+
 pub type Sp = Arc<Mutex<ServePoint>>;
 pub type UserMap = Arc<Mutex<HashMap<String, String>>>;
 

@@ -1,4 +1,4 @@
-import { on } from "process";
+import Message from './messages';
 
 enum WebsocketState {
     Connecting,
@@ -26,10 +26,16 @@ class WebsocketWrapper {
 
         if (onClose) this.ws.addEventListener('close', onClose);
         if (onError) this.ws.addEventListener('error', onError);
-        if (onMessage) this.ws.addEventListener('message', onMessage);
+        if (onMessage) {
+            console.log("Adding on message handler");
+            this.ws.addEventListener('message', (e) => onMessage(e));
+        }
         if (onOpen) this.ws.addEventListener('open', onOpen);
+    }
 
-
+    send(msg: Message) {
+        const stringData = msg.toJson();
+        this.ws.send(stringData);
     }
 
 }

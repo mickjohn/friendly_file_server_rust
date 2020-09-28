@@ -1,9 +1,31 @@
-const DevConfig = {
-    wsUrl: 'ws://127.0.0.1:5000/rooms/'
+interface Config {
+    wsUrl: string,
+    createRoomEndpoint: 'createroom',
+    localStorageKeys: {
+        roomCode: string,
+    }
+    hide_controls_timeout: number,
+    stats_update_interval: number,
 }
 
-const PrdConfig = {
-    wsUrl: `wss://${document.domain}:5001/rooms/`,
+const DevConfig: Config = {
+    wsUrl: 'ws://localhost:5000/rooms',
+    createRoomEndpoint: 'createroom',
+    localStorageKeys: {
+        roomCode: 'room'
+    },
+    hide_controls_timeout: 1500,
+    stats_update_interval: 1000,
+}
+
+const PrdConfig: Config = {
+    wsUrl: `wss://${document.domain}:5001/rooms`,
+    createRoomEndpoint: 'createroom',
+    localStorageKeys: {
+        roomCode: 'room'
+    },
+    hide_controls_timeout: 1500,
+    stats_update_interval: 1000,
 }
 
 

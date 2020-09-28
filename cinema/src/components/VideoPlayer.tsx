@@ -10,6 +10,7 @@ import FullScreenIcon from '../icons/fullscreen.svg';
 import ExitFullScreenIcon from '../icons/exit_fullscreen.svg';
 import VolumeMutedIcon from '../icons/volume_muted.svg';
 import VolumeIcon from '../icons/volume_icon.svg';
+import Config from '../config';
 
 interface Props {
     source: string;
@@ -17,7 +18,8 @@ interface Props {
     onPlay?: () => void;
     onPause?: () => void;
     onSeek?: () => void;
-    onTimeUpdate?: () => void;
+    onTimeUpdate?: (time: number) => void;
+    onTimeInterval?: (time: number) => void;
 }
 
 interface State {
@@ -29,7 +31,8 @@ interface State {
     showControls: boolean;
 }
 
-const HIDE_CONTROLS_TIMEOUT = 1200;
+// const HIDE_CONTROLS_TIMEOUT = Config.createRoomEndpoint;
+// const INTERVAL_TIME = Config.
 
 function toMovieTime(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / (60 * 60))
@@ -82,6 +85,14 @@ class VideoPlayer extends React.Component<Props, State> {
             this.props.onPause();
         } else {
             this.videoRef.current?.pause();
+        }
+    }
+
+    togglePlayback() {
+        if (this.state.playing) {
+            this.onPauseClicked();
+        } else {
+            this.onPlayClicked();
         }
     }
 
@@ -162,18 +173,21 @@ class VideoPlayer extends React.Component<Props, State> {
 
     hideControlsInFullscreen() {
         if (this.state.fullscreen) {
+            // If a timeout is already set, clear it
             if (this.hideControlsTimeout !== undefined) {
                 clearTimeout(this.hideControlsTimeout);
                 this.hideControlsTimeout= undefined;
                 this.setState({showControls: true});
             }
 
+            // Create a timeout to hide the controls
+            // The timout is cancelled if this funtion is called again
             if (!this.mouseOverControls && this.state.playing) {
                 this.hideControlsTimeout = window.setTimeout(() => {
                     console.debug("timeout called, hiding controls");
                     this.setState({showControls: false});
                     this.hideControlsTimeout = undefined;
-                }, HIDE_CONTROLS_TIMEOUT);
+                }, Config.hide_controls_timeout);
             }
         }
     }
@@ -193,8 +207,10 @@ class VideoPlayer extends React.Component<Props, State> {
     setCurrentTime(progress: number) {
         const video = this.videoRef.current;
         if (video !== null) {
-            const newTime = video.duration * progress;
-            video.currentTime = newTime;
+            if (progress >= 0 && progress <= 1) {
+                const newTime = video.duration * progress;
+                video.currentTime = newTime;
+            }
         }
     }
 
@@ -212,6 +228,7 @@ class VideoPlayer extends React.Component<Props, State> {
             if (this.figureRef.current) {
                 this.figureRef.current.requestFullscreen()
                 this.setState({ fullscreen: true, showControls: true });
+                this.hideControlsInFullscreen();
             }
         }
     }
@@ -225,12 +242,22 @@ class VideoPlayer extends React.Component<Props, State> {
             videoElem.addEventListener('pause', () => this.setState({ playing: false }));
             videoElem.addEventListener('volumechange', () => this.setState({ volume: videoElem.volume }));
             videoElem.addEventListener('loadedmetadata', () => this.setState({ duration: videoElem.duration }));
-            videoElem.addEventListener('timeupdate', () => this.setState({ currentTime: videoElem.currentTime }));
+            videoElem.addEventListener('timeupdate', () => {
+                this.setState({ currentTime: videoElem.currentTime })
+                if (this.props.onTimeUpdate) this.props.onTimeUpdate(videoElem.currentTime);
+            });
 
             if (this.state.playing) {
                 videoElem.play();
             } else {
                 videoElem.pause();
+            }
+
+            // Setup the time interval function
+            if (this.props.onTimeInterval) {
+                window.setInterval(() => {
+                    this.props.onTimeInterval!(videoElem.currentTime);
+                }, Config.stats_update_interval);
             }
         }
 
@@ -239,7 +266,6 @@ class VideoPlayer extends React.Component<Props, State> {
         if (figElem !== null) {
             figElem.addEventListener('fullscreenchange', () => this.setState({ fullscreen: document.fullscreenElement !== null }));
         }
-
     }
 
     // Check if the props have updated. If the playing prop has changed then act accordingly
@@ -278,7 +304,11 @@ class VideoPlayer extends React.Component<Props, State> {
                         onMouseEnter={() => {mouseEnter()}}
                         onMouseLeave={() => {mouseLeave()}}
                     >
-                        <video ref={this.videoRef} preload="metadata">
+                        <video
+                            ref={this.videoRef}
+                            preload="metadata"
+                            onClick={() => this.togglePlayback()}
+                        >
                             <source src={this.props.source} type="video/mp4" />
                             Your browser does not support HTML video.
                         </video>

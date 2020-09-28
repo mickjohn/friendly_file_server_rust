@@ -53,6 +53,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // The endpoint used to create a Websocket cinema room
     let create_room = filters::create_room_filter(users.clone(), rooms.clone(), urls.clone());
 
+    // Endpoint to check if room exists
+    let check_room = filters::check_room_filter(users.clone(), rooms.clone());
+
     // The endpoint to serve files. Should be used AFTER the 'api' filter, in order 
     // to ensure that Directories get rendered as an index, and that this serves 
     // the files
@@ -81,6 +84,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
                    .or(create_room.recover(filters::recover_auth))
+                   .or(check_room.recover(filters::recover_auth))
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))

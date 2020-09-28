@@ -1,7 +1,7 @@
 use crate::verify;
 use super::handlers;
 use super::rejections;
-use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery};
+use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery};
 
 use warp::Filter;
 use warp::http::StatusCode;
@@ -52,6 +52,19 @@ pub fn create_room_filter(
         .and(with_urls(urls))
         .and(warp::query::<UrlQuery>())
         .and_then(handlers::create_room)
+}
+
+pub fn check_room_filter(
+    users: UserMap,
+    rooms: Rooms,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path("checkroom")
+        .and(warp::path::end())
+        .and(warp::get())
+        .and(auth(users))
+        .and(with_rooms(rooms))
+        .and(warp::query::<RoomCodeQuery>())
+        .and_then(handlers::check_room)
 }
 
 pub fn wwf_redirect(

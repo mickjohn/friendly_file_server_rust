@@ -76,6 +76,7 @@ async fn user_disconnected(my_id: usize, code: String, rooms: Rooms) {
 
 async fn user_msg_recieved(my_id: usize, code: String, msg: warp::filters::ws::Message, rooms_arc: Rooms) {
         let msg = if let Ok(s) = msg.to_str() { s } else { return; };
+        // println!("msg = {}", msg);
         if let Ok(parsed_msg) = serde_json::from_str::<Messages>(msg) {
             let mut rooms = rooms_arc.lock().await;
             let room: &mut Room = rooms.get_mut(&code).unwrap();
@@ -93,9 +94,9 @@ async fn user_msg_recieved(my_id: usize, code: String, msg: warp::filters::ws::M
                 },
 
                 // Return the Stats message with the ID added
-                Messages::Stats{name: n, time: t, player_state: p} => {
+                Messages::Stats{name: n, time: t, player_state: p, director: d} => {
                     for user in room.users_by_id.values() {
-                        let resp = Messages::StatsResponse{name: &n, time: t, id: my_id, player_state: p.clone()};
+                        let resp = Messages::StatsResponse{name: &n, time: t, id: my_id, player_state: p.clone(), director: d};
                         let resp_str = serde_json::to_string(&resp).unwrap();
                         let tx = &user.sender;
                         let _ = tx.send(Ok(Message::text(&resp_str)));
