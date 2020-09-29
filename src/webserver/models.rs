@@ -9,7 +9,7 @@ use futures::future::{AbortHandle};
 
 use crate::fs_utils::ServePoint;
 use crate::hb_helpers;
-use crate::webserver::messages::{PlayerState, Messages::StatsResponse, StatsStruct};
+use crate::webserver::messages::{PlayerState, StatsStruct};
 
 
 #[derive(Deserialize)]

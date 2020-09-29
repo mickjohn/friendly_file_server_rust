@@ -26,6 +26,11 @@ export function toMovieTime(totalSeconds: number): string {
     return `${hours.toString(10).padStart(2, '0')}:${minutes.toString(10).padStart(2, '0')}:${seconds.toString(10).padStart(2, '0')}`;
 }
 
-
+export function removeRoomFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('room');
+    const newUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState('', '', newUrl);
+}
 
 export default toMovieTime;

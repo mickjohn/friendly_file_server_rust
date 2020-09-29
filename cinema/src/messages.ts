@@ -99,6 +99,28 @@ export class StatsResponse {
 
 }
 
+export class StatsResponses {
+    static type = "StatsResponses";
+    type = StatsResponses.type;
+    responses: StatsResponse[];
+
+    constructor( responses: StatsResponse[]) {
+        this.responses = responses;
+    }
+
+    toJson() {
+        const responses_json: string[] = this.responses.map(r => {
+            return `{"name": "${r.name}", "id": ${r.id}, "time": ${r.time}, "playerState": "${r.playerState}", "director": ${r.director}}`;
+        });
+        const responses = `[${responses_json.join(',')}]`;
+
+        return `{
+            "type": "${StatsResponses.type},
+            "responses": ${responses},
+        }`;
+    }
+}
+
 export class Stats {
     static type = "Stats";
     type = Stats.type;
@@ -131,6 +153,18 @@ export class Stats {
 
 }
 
+
+export class RequestStats {
+    static type = "RequestStats";
+    type = RequestStats.type;
+
+    toJson() {
+        return `{"type": "${this.type}"}`;
+    }
+}
+
+
+
 class Unknown {
     static type = "Unkown";
     type = Unknown.type;
@@ -158,6 +192,18 @@ export function parseMessage(msg: any) : Message {
         );
     }
 
+    if (type === StatsResponses.type) {
+        const responses = msg['responses'].map((r: any) => {
+            return new StatsResponse(
+                r['name'],
+                r['time'],
+                r['id'],
+                r['player_state'],
+                r['director'],
+            )
+        });
+        return new StatsResponses(responses);
+    }
     return new Unknown();
 }
 

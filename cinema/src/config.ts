@@ -1,6 +1,7 @@
 interface Config {
     wsUrl: string,
-    createRoomEndpoint: 'createroom',
+    createRoomEndpoint: string,
+    checkRoomEndpoint: string,
     localStorageKeys: {
         roomCode: string,
     }
@@ -11,6 +12,7 @@ interface Config {
 const DevConfig: Config = {
     wsUrl: 'ws://localhost:5000/rooms',
     createRoomEndpoint: 'createroom',
+    checkRoomEndpoint: 'checkroom',
     localStorageKeys: {
         roomCode: 'room'
     },
@@ -21,6 +23,7 @@ const DevConfig: Config = {
 const PrdConfig: Config = {
     wsUrl: `wss://${document.domain}:5001/rooms`,
     createRoomEndpoint: 'createroom',
+    checkRoomEndpoint: 'checkroom',
     localStorageKeys: {
         roomCode: 'room'
     },

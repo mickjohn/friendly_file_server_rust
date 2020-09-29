@@ -42,6 +42,7 @@ pub fn render_cinema_page<'a>(
 pub fn create_room_filter(
     users: UserMap,
     rooms: Rooms,
+    rooms_cleaner: RoomCleaner,
     urls: Urls,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path("createroom")
@@ -49,6 +50,7 @@ pub fn create_room_filter(
         .and(warp::get())
         .and(auth(users))
         .and(with_rooms(rooms))
+        .and(with_room_cleaner(rooms_cleaner))
         .and(with_urls(urls))
         .and(warp::query::<UrlQuery>())
         .and_then(handlers::create_room)

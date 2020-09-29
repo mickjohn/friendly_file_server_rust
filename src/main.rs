@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         .map(|_ : filters::Authenticated, file| file);
 
     // The endpoint used to create a Websocket cinema room
-    let create_room = filters::create_room_filter(users.clone(), rooms.clone(), urls.clone());
+    let create_room = filters::create_room_filter(users.clone(), rooms.clone(), room_cleaner.clone(), urls.clone());
 
     // Endpoint to check if room exists
     let check_room = filters::check_room_filter(users.clone(), rooms.clone());

@@ -7,7 +7,7 @@ import UsersTable from './UsersTable'
 
 // Other classes
 import Config from '../config';
-import {parseMessage, Play, Pause, StatsResponse, Stats, Disconnected} from '../messages';
+import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats} from '../messages';
 import User from '../user';
 import WebsocketWrapper from '../websocket';
 
@@ -22,7 +22,9 @@ interface State {
     connectedUsers: Array<User>;
 }
 
-interface Props {};
+interface Props {
+    videoSource: string;
+};
 
 function getRoomFromLocalStorage(): string|undefined {
     const storedRoom = window.localStorage.getItem(Config.localStorageKeys.roomCode) ?? undefined;
@@ -41,13 +43,14 @@ function getRoomFromUrlParams(): string|undefined {
 class Cinema extends React.Component<Props, State> {
 
     websocket: WebsocketWrapper|undefined;
-    videoSource: string;
-    // connectedUsers
+    // videoSource: string;
+    justJoined: boolean;
 
     constructor(_props: Props) {
         super(_props);
         this.websocket = undefined;
-        this.videoSource = "http://localhost:5000/browse/4K%20Video%20Downloader/The%20Cure%20-%20A%20Forest%20(Official%20Video).mp4";
+        // this.videoSource = "http://localhost:5000/browse/4K%20Video%20Downloader/The%20Cure%20-%20A%20Forest%20(Official%20Video).mp4";
+        this.justJoined = false;
 
         const roomCode = getRoomFromUrlParams();
         const roomCodeFromStorage = getRoomFromLocalStorage();
@@ -106,18 +109,24 @@ class Cinema extends React.Component<Props, State> {
                 this.setState({isPlaying: false});
                 break;
             }
-            case StatsResponse.type: {
-                const statsResponse = message as StatsResponse;
-                const user = statsResponse.toUser();
-                const users = [...this.state.connectedUsers];
-                // const index = users.indexOf(user);
+            // case StatsResponse.type: {
+            //     const statsResponse = message as StatsResponse;
+            //     const user = statsResponse.toUser();
+            //     const users = [...this.state.connectedUsers];
+            //     // const index = users.indexOf(user);
 
-                const index = users.map(u => u.id).indexOf(user.id);
-                if (index === -1) {
-                    users.push(user);
-                } else {
-                    users[index] = user;
-                }
+            //     const index = users.map(u => u.id).indexOf(user.id);
+            //     if (index === -1) {
+            //         users.push(user);
+            //     } else {
+            //         users[index] = user;
+            //     }
+            //     this.setState({connectedUsers: users});
+            //     break;
+            // }
+            case StatsResponses.type: {
+                const statsResonses = message as StatsResponses;
+                const users = statsResonses.responses.map((r) => { return r.toUser()});
                 this.setState({connectedUsers: users});
                 break;
             }
@@ -141,7 +150,7 @@ class Cinema extends React.Component<Props, State> {
     };
 
     roomCreated(roomCode: string) {
-        const newUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
+        const newUrl = `${window.location.origin}${window.location.pathname}?video=${this.props.videoSource}&room=${roomCode}`;
         window.history.replaceState('', '', newUrl);
         window.localStorage.setItem(Config.localStorageKeys.roomCode, roomCode);
         this.websocket = this.createWebsocket(roomCode);
@@ -170,12 +179,14 @@ class Cinema extends React.Component<Props, State> {
 
             onTimeInterval = (time: number) => {
                 this.websocket?.send(new Stats(this.state.name, time, "Playing", this.state.isDirector));
+                this.websocket?.send(new RequestStats());
             };
         } else if (this.state.inParty) {
             onPlay = () => {};
             onPause = () => {};
             onTimeInterval = (time: number) => {
                 this.websocket?.send(new Stats(this.state.name, time, "Playing", this.state.isDirector));
+                this.websocket?.send(new RequestStats());
             };
         } else {
             onPlay = () => this.setState({isPlaying: true});
@@ -185,7 +196,7 @@ class Cinema extends React.Component<Props, State> {
 
         return <VideoPlayer
             playing={this.state.isPlaying}
-            source={this.videoSource}
+            source={this.props.videoSource}
             onPlay={onPlay}
             onPause={onPause}
             onTimeInterval={onTimeInterval}

@@ -94,7 +94,7 @@ async fn user_disconnected(my_id: usize, code: String, rooms_arc: Rooms, cleaner
     }
 }
 
-async fn delete_from_rooms(rooms: Rooms, cleaner: RoomCleaner, code: String) {
+pub async fn delete_from_rooms(rooms: Rooms, cleaner: RoomCleaner, code: String) {
     let (abort_handle, abort_registration) = AbortHandle::new_pair();
     // Small scope to limit the mutex
     {
