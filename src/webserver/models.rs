@@ -40,6 +40,7 @@ pub type Urls = Arc<Mutex<HashMap<String, String>>>;
 pub struct Room {
     pub id: String,
     pub users_by_id: HashMap<usize, User>,
+    pub director: Option<String>,
 }
 
 impl Room {
@@ -47,6 +48,7 @@ impl Room {
         return Room {
             id,
             users_by_id: HashMap::new(),
+            director: None,
         }
     }
     

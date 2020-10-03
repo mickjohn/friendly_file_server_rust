@@ -38,6 +38,10 @@ class WebsocketWrapper {
         this.ws.send(stringData);
     }
 
+    close() {
+        this.ws.close();
+    }
+
 }
 
 export default WebsocketWrapper;

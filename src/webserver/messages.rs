@@ -27,5 +27,5 @@ pub enum Messages<'a> {
     StatsResponse{name: &'a str, time: f64, player_state: PlayerState, id: usize, director: bool},
     Disconnected{id: usize},
     RequestStats,
-    StatsResponses{responses: Vec<StatsStruct<'a>>},
+    StatsResponses{ director: Option<&'a str>, responses: Vec<StatsStruct<'a>>},
 }

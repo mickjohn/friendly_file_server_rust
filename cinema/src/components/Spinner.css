@@ -1,3 +1,9 @@
+.Spinner-container {
+    min-width: 300px;
+    margin: 0 auto;
+    text-align: center;
+}
+
 .Spinner {
     border: 16px solid #f3f3f3;
     /* Light grey */

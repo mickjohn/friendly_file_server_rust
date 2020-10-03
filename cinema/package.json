@@ -1,5 +1,6 @@
 {
   "name": "cinema",
+  "homepage": "/static/cinema_build",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

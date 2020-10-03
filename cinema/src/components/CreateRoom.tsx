@@ -64,26 +64,3 @@ const CreateRoom = (props: Props) => {
 }
 
 export default CreateRoom;
-
-    // $("#create-room").click(function () {
-    //     const b64Path = btoa(location.pathname);
-    //     const url = `${location.protocol}//${document.domain}:${location.port}/createroom?url=${b64Path}`;
-    //     const httpRequest = new XMLHttpRequest();
-    //     httpRequest.onreadystatechange = function () {
-    //         if (httpRequest.readyState === XMLHttpRequest.DONE) {
-    //             if (httpRequest.status === 200) {
-    //                 const resp = JSON.parse(httpRequest.responseText);
-    //                 roomCode = resp['room'];
-    //                 initialiseWebsocket(roomCode);
-    //                 enableDirectorMode()
-    //                 initSideWindow(roomCode, isDirector);
-    //                 $('#exit-wwf').show();
-    //                 $('#show-cinema-info').hide();
-    //             } else {
-    //                 alert('There was a problem with the request.');
-    //             }
-    //         }
-    //     };
-    //     httpRequest.open('GET', url, true);
-    //     httpRequest.send();
-    // });

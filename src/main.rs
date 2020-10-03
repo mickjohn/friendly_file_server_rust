@@ -95,6 +95,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(redirect);
 
     // Start up the server...
+    info!("Serving routes...");
     warp::serve(routes).run((config.ipaddr, config.port)).await;
     Ok(())
 }

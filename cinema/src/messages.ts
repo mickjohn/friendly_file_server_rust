@@ -7,6 +7,12 @@ type Message = Play
     | StatsResponse
     | Unknown;
 
+export enum PlayerState {
+    Playing = "Playing",
+    Paused = "Paused",
+    Loading = "Loading",
+}
+
 export class Play {
     static type: string = "Play"
     name: string;
@@ -103,9 +109,11 @@ export class StatsResponses {
     static type = "StatsResponses";
     type = StatsResponses.type;
     responses: StatsResponse[];
+    director: string | null;
 
-    constructor( responses: StatsResponse[]) {
+    constructor(responses: StatsResponse[], director: string|null) {
         this.responses = responses;
+        this.director = director;
     }
 
     toJson() {
@@ -116,6 +124,7 @@ export class StatsResponses {
 
         return `{
             "type": "${StatsResponses.type},
+            "director": "${this.director}",
             "responses": ${responses},
         }`;
     }
@@ -126,13 +135,13 @@ export class Stats {
     type = Stats.type;
     name: string;
     time: number;
-    playerState: string;
+    playerState: PlayerState;
     director: boolean;
 
     constructor(
         name: string,
         time: number,
-        playerState: string,
+        playerState: PlayerState,
         director: boolean,
     ) {
         this.name = name;
@@ -202,7 +211,8 @@ export function parseMessage(msg: any) : Message {
                 r['director'],
             )
         });
-        return new StatsResponses(responses);
+        const director: string|null = msg['director'];
+        return new StatsResponses(responses, director);
     }
     return new Unknown();
 }

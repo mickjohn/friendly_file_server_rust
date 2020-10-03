@@ -7,6 +7,7 @@ interface Config {
     }
     hide_controls_timeout: number,
     stats_update_interval: number,
+    redirect_target: string,
 }
 
 const DevConfig: Config = {
@@ -18,6 +19,7 @@ const DevConfig: Config = {
     },
     hide_controls_timeout: 1500,
     stats_update_interval: 1000,
+    redirect_target: '/browse',
 }
 
 const PrdConfig: Config = {
@@ -29,6 +31,7 @@ const PrdConfig: Config = {
     },
     hide_controls_timeout: 1500,
     stats_update_interval: 1000,
+    redirect_target: '/browse',
 }
 
 

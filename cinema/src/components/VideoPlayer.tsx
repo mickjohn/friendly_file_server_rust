@@ -67,6 +67,24 @@ class VideoPlayer extends React.Component<Props, State> {
     }
 
 
+    // Try to play the video. If something goes wrong, mute the auto and try again.
+    // This is needed because autoplay with audio is disabled on some browsers.
+    playVideo() {
+        const video = this.videoRef.current;
+        if (video) {
+            const promise = video.play();
+
+            if (promise !== undefined) {
+                promise.then(() => {
+                    // Autoplay started!
+                }).catch(() => {
+                    // Show something in the UI that the video is muted
+                    // this.setVolume(0);
+                    video.play();
+                });
+            }
+        }
+    }
 
     onPlayClicked() {
         // If a handler was supplied then use it.
@@ -74,7 +92,7 @@ class VideoPlayer extends React.Component<Props, State> {
         if (this.props.onPlay !== undefined) {
             this.props.onPlay();
         } else {
-            this.videoRef.current?.play();
+            this.playVideo();
         }
     }
 
@@ -274,7 +292,7 @@ class VideoPlayer extends React.Component<Props, State> {
             const videoElem = this.videoRef.current;
             if (videoElem !== null) {
                 if (this.props.playing) {
-                    videoElem.play();
+                    this.playVideo();
                 } else {
                     videoElem.pause();
                 }

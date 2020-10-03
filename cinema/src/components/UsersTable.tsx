@@ -2,6 +2,8 @@ import React from 'react';
 import User from '../user';
 import {toMovieTime} from '../utils';
 
+import './UsersTable.css';
+
 interface Props {
     users: User[],
 }
@@ -13,7 +15,8 @@ const UsersTable = (props: Props) => {
     });
 
     return (
-        <div>
+        <div className="UsersTable">
+            <h5>The Party</h5>
             <ul>
                 {listItems}
             </ul>

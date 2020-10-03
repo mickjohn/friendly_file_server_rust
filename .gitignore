@@ -1,2 +1,4 @@
 /target
 /cinema/node_modules/
+/cinema/build/
+/static/cinema_build/

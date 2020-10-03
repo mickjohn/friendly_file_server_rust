@@ -7,9 +7,14 @@ import UsersTable from './UsersTable'
 
 // Other classes
 import Config from '../config';
-import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats} from '../messages';
+import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats, PlayerState} from '../messages';
 import User from '../user';
 import WebsocketWrapper from '../websocket';
+
+import './Cinema.css';
+import SideContent from './SideContent';
+import { timingSafeEqual } from 'crypto';
+import { removeRoomFromUrl } from '../utils';
 
 
 interface State {
@@ -20,6 +25,8 @@ interface State {
     roomCode: string|undefined;
     name: string;
     connectedUsers: Array<User>;
+    directorName: string|undefined;
+    showSideWindow: boolean;
 }
 
 interface Props {
@@ -82,6 +89,8 @@ class Cinema extends React.Component<Props, State> {
             roomCode: roomCode,
             name: window.localStorage.getItem('user') ?? "user",
             connectedUsers: [],
+            directorName: undefined,
+            showSideWindow: true,
         }
     }
 
@@ -109,25 +118,13 @@ class Cinema extends React.Component<Props, State> {
                 this.setState({isPlaying: false});
                 break;
             }
-            // case StatsResponse.type: {
-            //     const statsResponse = message as StatsResponse;
-            //     const user = statsResponse.toUser();
-            //     const users = [...this.state.connectedUsers];
-            //     // const index = users.indexOf(user);
-
-            //     const index = users.map(u => u.id).indexOf(user.id);
-            //     if (index === -1) {
-            //         users.push(user);
-            //     } else {
-            //         users[index] = user;
-            //     }
-            //     this.setState({connectedUsers: users});
-            //     break;
-            // }
             case StatsResponses.type: {
                 const statsResonses = message as StatsResponses;
                 const users = statsResonses.responses.map((r) => { return r.toUser()});
-                this.setState({connectedUsers: users});
+                this.setState({
+                    connectedUsers: users,
+                    directorName: statsResonses.director ?? undefined
+                });
                 break;
             }
             case Disconnected.type: {
@@ -157,6 +154,17 @@ class Cinema extends React.Component<Props, State> {
         this.setState({isDirector: true, inParty: true, roomCode: roomCode});
     };
 
+    leaveParty() {
+        this.setState({
+            isDirector: false,
+            inParty: false,
+            isPlaying: false,
+            connectedUsers: [],
+        });
+        this.websocket?.close();
+        removeRoomFromUrl();
+    }
+
     /*
     Create the VideoPlayer component and configure it according to if and how the user
     is connected to the party.
@@ -178,14 +186,14 @@ class Cinema extends React.Component<Props, State> {
             };
 
             onTimeInterval = (time: number) => {
-                this.websocket?.send(new Stats(this.state.name, time, "Playing", this.state.isDirector));
+                this.websocket?.send(new Stats(this.state.name, time, PlayerState.Playing, this.state.isDirector));
                 this.websocket?.send(new RequestStats());
             };
         } else if (this.state.inParty) {
             onPlay = () => {};
             onPause = () => {};
             onTimeInterval = (time: number) => {
-                this.websocket?.send(new Stats(this.state.name, time, "Playing", this.state.isDirector));
+                this.websocket?.send(new Stats(this.state.name, time, PlayerState.Playing, this.state.isDirector));
                 this.websocket?.send(new RequestStats());
             };
         } else {
@@ -201,6 +209,24 @@ class Cinema extends React.Component<Props, State> {
             onPause={onPause}
             onTimeInterval={onTimeInterval}
         />
+    }
+
+    getSideWindow() {
+        if (!this.state.showSideWindow) return null;
+        return (
+            <SideContent 
+                roomCreatedCallback={(roomCode) => this.roomCreated(roomCode)}
+                leaveButtonCallback={() => this.leaveParty()}
+                hideCallback={() => this.setState({showSideWindow: false})}
+
+                connectedUsers={this.state.connectedUsers}
+                name={this.state.name}
+                inParty={this.state.inParty}
+                room={this.state.roomCode}
+                directorName={this.state.directorName}
+                isDirector={this.state.isDirector}
+            />
+        );
     }
 
     render() {
@@ -231,16 +257,11 @@ class Cinema extends React.Component<Props, State> {
                     <CreateRoom roomCreatedCallback={(roomCode) => this.roomCreated(roomCode)} />
                 </ModalPopup>
 
-                {this.getVideoPlayer()}
-                {partyInfo}
-                <h1> Watch with friends</h1>
-                <button onClick={() => {
-                    this.setState({ showModal: true, isPlaying: false });
-                }}>
-                    WWF!
-                </button>
-
-                <UsersTable users={this.state.connectedUsers} />
+                <div className="cinema-container">
+                    {this.getVideoPlayer()}
+                    {/* {partyInfo} */}
+                    {this.getSideWindow()}
+                </div>
             </Fragment>
         );
     }

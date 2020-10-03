@@ -139,29 +139,24 @@ async fn user_msg_recieved(my_id: usize, code: String, msg: warp::filters::ws::M
                 },
 
                 // Return the Stats message with the ID added
-                Messages::Stats{name: n, time: t, player_state: p, director: d} => {
+                Messages::Stats{name: n, time: t, player_state: p, director: is_director} => {
                     // let mut user: User = room.users_by_id.get_mut(&my_id);
+                    if is_director {
+                        room.director = Some(n.clone());
+                    }
+
                     if let Some(mut user) = room.users_by_id.get_mut(&my_id) {
                         user.user_data.name = n;
                         user.user_data.time = t;
                         user.user_data.state = p;
-                        user.user_data.director = d;
+                        user.user_data.director = is_director;
                     }
-
-
-                    /////////////////////
-                    // for user in room.users_by_id.values() {
-                    //     let resp = Messages::StatsResponse{name: &n, time: t, id: my_id, player_state: p.clone(), director: d};
-                    //     let resp_str = serde_json::to_string(&resp).unwrap();
-                    //     let tx = &user.sender;
-                    //     let _ = tx.send(Ok(Message::text(&resp_str)));
-                    // }
                 },
 
                 // If a users requests the stats, send them to that user only.
                 Messages::RequestStats => {
                     let stats: Vec<StatsStruct> = room.users_by_id.values().map(|s| s.user_data.to_stats_struct()).collect();
-                    let resp = Messages::StatsResponses{responses: stats};
+                    let resp = Messages::StatsResponses{director: room.director.as_deref(), responses: stats};
                     let resp_str = serde_json::to_string(&resp).unwrap();
                     let user = &room.users_by_id[&my_id];
                     let tx = &user.sender;

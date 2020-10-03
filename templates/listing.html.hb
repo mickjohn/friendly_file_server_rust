@@ -53,7 +53,7 @@
           <!-- <a class="cinema" href="/cinema{{@root.listing.path}}{{ child.name}}?cinema=1">
             (click here to stream)
           </a> -->
-          <a class="cinema" href="/cinema?video={{@root.listing.path}}{{ child.name}}">
+          <a class="cinema" href="/static/cinema_build?video=/browse{{@root.listing.path}}{{child.name}}">
             (click here to stream)
           </a>
           {{/if }}
