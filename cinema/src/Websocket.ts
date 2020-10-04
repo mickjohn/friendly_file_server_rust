@@ -35,7 +35,9 @@ class WebsocketWrapper {
 
     send(msg: Message) {
         const stringData = msg.toJson();
-        this.ws.send(stringData);
+        if (this.ws.readyState === this.ws.OPEN) {
+            this.ws.send(stringData);
+        }
     }
 
     close() {

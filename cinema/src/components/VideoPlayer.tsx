@@ -31,9 +31,6 @@ interface State {
     showControls: boolean;
 }
 
-// const HIDE_CONTROLS_TIMEOUT = Config.createRoomEndpoint;
-// const INTERVAL_TIME = Config.
-
 function toMovieTime(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / (60 * 60))
     const minutes = Math.floor((totalSeconds / 60) - (hours * 60));

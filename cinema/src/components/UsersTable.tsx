@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { PlayerState } from '../messages';
 import User from '../user';
 import {toMovieTime} from '../utils';
@@ -13,15 +13,15 @@ interface Props {
 
 const UsersTable = (props: Props) => {
     const miniSpinner = (
-            <div className="mini-spinner"></div>
+        <div className="mini-spinner"></div>
     );
 
     const tableRows = props.users.map((user: User) => {
         let iconData;
         if (user.state === PlayerState.Playing) {
-            iconData = <td><img src={smallPlayIcon}/></td>;
+            iconData = <td><img alt="play" src={smallPlayIcon}/></td>;
         } else if (user.state === PlayerState.Paused) {
-            iconData = <td><img src={smallPauseIcon}/></td>;
+            iconData = <td><img alt="pause" src={smallPauseIcon}/></td>;
         } else {
             iconData = <td>{miniSpinner}</td>;
         }
@@ -36,7 +36,7 @@ const UsersTable = (props: Props) => {
         const timeData = <td>{toMovieTime(user.time)}</td>
 
         return (
-            <tr>
+            <tr key={user.id}>
                 {iconData}
                 {nameData}
                 {timeData}
@@ -46,12 +46,12 @@ const UsersTable = (props: Props) => {
 
     return (
         <div className="UsersTable">
-            <h5>The Party</h5>
-            {/* <ul>
-                {listItems}
-            </ul> */}
+            <span>Users connected to this party</span>
+            <hr/>
             <table>
-                {tableRows}
+                <tbody>
+                    {tableRows}
+                </tbody>
             </table>
         </div>
 

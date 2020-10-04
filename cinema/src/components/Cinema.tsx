@@ -3,7 +3,6 @@ import React, {Fragment } from 'react';
 import VideoPlayer from './VideoPlayer';
 import ModalPopup from './ModalPopup';
 import CreateRoom from './CreateRoom';
-import UsersTable from './UsersTable'
 
 // Other classes
 import Config from '../config';
@@ -13,7 +12,6 @@ import WebsocketWrapper from '../websocket';
 
 import './Cinema.css';
 import SideContent from './SideContent';
-import { timingSafeEqual } from 'crypto';
 import { removeRoomFromUrl } from '../utils';
 
 
@@ -21,7 +19,7 @@ interface State {
     isPlaying: boolean;
     inParty: boolean;
     isDirector: boolean;
-    showModal: boolean;
+    // showModal: boolean;
     roomCode: string|undefined;
     name: string;
     connectedUsers: Array<User>;
@@ -85,7 +83,7 @@ class Cinema extends React.Component<Props, State> {
             isDirector: isDirector,
             isPlaying: false,
             inParty: inParty,
-            showModal: false,
+            // showModal: false,
             roomCode: roomCode,
             name: window.localStorage.getItem('user') ?? "user",
             connectedUsers: [],
@@ -220,6 +218,11 @@ class Cinema extends React.Component<Props, State> {
                 roomCreatedCallback={(roomCode) => this.roomCreated(roomCode)}
                 leaveButtonCallback={() => this.leaveParty()}
                 hideCallback={() => this.setState({showSideWindow: false})}
+                setUserNameCallback={(name) => {
+                    this.setState({name: name});
+                    window.localStorage.setItem('user', name);
+                }}
+                pauseCallback={() => this.setState({isPlaying: false})}
 
                 connectedUsers={this.state.connectedUsers}
                 name={this.state.name}
@@ -255,9 +258,9 @@ class Cinema extends React.Component<Props, State> {
 
         return (
             <Fragment>
-                <ModalPopup show={this.state.showModal} onClose={() => this.setState({ showModal: false })}>
+                {/* <ModalPopup show={this.state.showModal} onClose={() => this.setState({ showModal: false })}>
                     <CreateRoom roomCreatedCallback={(roomCode) => this.roomCreated(roomCode)} />
-                </ModalPopup>
+                </ModalPopup> */}
 
                 <div className="cinema-container">
                     {this.getVideoPlayer()}

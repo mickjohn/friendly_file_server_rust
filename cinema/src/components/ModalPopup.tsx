@@ -9,6 +9,7 @@ interface Props {
     classNamePrefix?: string;
 }
 
+
 const ModalPopup = (props: Props) => {
     if (!props.show) return null;
     const prefix = props.classNamePrefix ?? '';

@@ -1,21 +1,4 @@
 
-
-// function setUrlParams(params: Map<string, string>) {
-//     let url = window.location.href;
-//     url = url.replace(window.location.search, '');
-//     let pairs: string[] = [];
-
-//     params.forEach((value, key) => {
-//         pairs.push(`${key}=${value}`);
-//     });
-
-//     if (pairs.length) {
-//         const search = "?" + pairs.join("&");
-//         url = url + search;
-//         window.history.replaceState('', '', url);
-//     }
-// }
-
 /*
 Turn a float of seconds into a movie timestamp like "01:45:14" string
 */
