@@ -2,3 +2,35 @@
 .UsersTable {
     border: 1px solid green;
 }
+
+.UsersTable img {
+    width: 24px;
+}
+
+.UsersTable table {
+    width: 100%;
+}
+
+.UsersTable td {
+    text-align: center;
+}
+
+
+.mini-spinner {
+    border: 5px solid #9ad6ee;
+    border-top: 5px solid #185781;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    animation: mini-spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes mini-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

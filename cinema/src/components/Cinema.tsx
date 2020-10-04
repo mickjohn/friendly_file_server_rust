@@ -170,7 +170,7 @@ class Cinema extends React.Component<Props, State> {
     is connected to the party.
     */
     getVideoPlayer() {
-        let onPlay, onPause, onTimeInterval;
+        let onPlay, onPause, onSeek, onTimeInterval;
 
         if (this.state.inParty && this.state.isDirector) {
             onPlay = () => {
@@ -185,15 +185,17 @@ class Cinema extends React.Component<Props, State> {
                 this.websocket?.send(msg);
             };
 
-            onTimeInterval = (time: number) => {
-                this.websocket?.send(new Stats(this.state.name, time, PlayerState.Playing, this.state.isDirector));
+            onTimeInterval = (time: number, playerState: PlayerState) => {
+                this.websocket?.send(new Stats(this.state.name, time, playerState, this.state.isDirector));
                 this.websocket?.send(new RequestStats());
             };
+
+            // onSeek = (newTime: number) => { }
         } else if (this.state.inParty) {
             onPlay = () => {};
             onPause = () => {};
-            onTimeInterval = (time: number) => {
-                this.websocket?.send(new Stats(this.state.name, time, PlayerState.Playing, this.state.isDirector));
+            onTimeInterval = (time: number, playerState: PlayerState) => {
+                this.websocket?.send(new Stats(this.state.name, time, playerState, this.state.isDirector));
                 this.websocket?.send(new RequestStats());
             };
         } else {

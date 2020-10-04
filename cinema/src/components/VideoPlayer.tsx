@@ -11,15 +11,15 @@ import ExitFullScreenIcon from '../icons/exit_fullscreen.svg';
 import VolumeMutedIcon from '../icons/volume_muted.svg';
 import VolumeIcon from '../icons/volume_icon.svg';
 import Config from '../config';
+import { PlayerState } from '../messages';
 
 interface Props {
     source: string;
     playing: boolean;
     onPlay?: () => void;
     onPause?: () => void;
-    onSeek?: () => void;
-    onTimeUpdate?: (time: number) => void;
-    onTimeInterval?: (time: number) => void;
+    onSeek?: (newTime: number) => void;
+    onTimeInterval?: (time: number, playerState: PlayerState) => void;
 }
 
 interface State {
@@ -78,12 +78,29 @@ class VideoPlayer extends React.Component<Props, State> {
                 promise.then(() => {
                     // Autoplay started!
                 }).catch(() => {
+                    // Show an Error here.
+
+
                     // Show something in the UI that the video is muted
                     // this.setVolume(0);
-                    video.play();
+                    // video.play();
                 });
             }
         }
+    }
+
+    getPlayerState() : PlayerState {
+        const video = this.videoRef.current;
+        if (video) {
+            if (video.readyState < 4) {
+                return PlayerState.Loading;
+            } else if (video.paused) {
+                return PlayerState.Paused;
+            } else {
+                return PlayerState.Playing;
+            }
+        }
+        return PlayerState.Paused;
     }
 
     onPlayClicked() {
@@ -224,10 +241,14 @@ class VideoPlayer extends React.Component<Props, State> {
 
     setCurrentTime(progress: number) {
         const video = this.videoRef.current;
-        if (video !== null) {
+        if (video) {
             if (progress >= 0 && progress <= 1) {
                 const newTime = video.duration * progress;
-                video.currentTime = newTime;
+                if (this.props.onSeek) {
+                    this.props.onSeek(newTime);
+                } else {
+                    video.currentTime = newTime;
+                }
             }
         }
     }
@@ -262,7 +283,6 @@ class VideoPlayer extends React.Component<Props, State> {
             videoElem.addEventListener('loadedmetadata', () => this.setState({ duration: videoElem.duration }));
             videoElem.addEventListener('timeupdate', () => {
                 this.setState({ currentTime: videoElem.currentTime })
-                if (this.props.onTimeUpdate) this.props.onTimeUpdate(videoElem.currentTime);
             });
 
             if (this.state.playing) {
@@ -274,7 +294,7 @@ class VideoPlayer extends React.Component<Props, State> {
             // Setup the time interval function
             if (this.props.onTimeInterval) {
                 window.setInterval(() => {
-                    this.props.onTimeInterval!(videoElem.currentTime);
+                    this.props.onTimeInterval!(videoElem.currentTime, this.getPlayerState());
                 }, Config.stats_update_interval);
             }
         }
@@ -319,14 +339,12 @@ class VideoPlayer extends React.Component<Props, State> {
                     <div
                         className="video-and-controls"
                         onMouseMove={(e) => { this.hideControlsInFullscreen() }}
-                        onMouseEnter={() => {mouseEnter()}}
-                        onMouseLeave={() => {mouseLeave()}}
-                    >
+                        onMouseEnter={() => { mouseEnter() }}
+                        onMouseLeave={() => { mouseLeave() }} >
                         <video
                             ref={this.videoRef}
                             preload="metadata"
-                            onClick={() => this.togglePlayback()}
-                        >
+                            onClick={() => this.togglePlayback()} >
                             <source src={this.props.source} type="video/mp4" />
                             Your browser does not support HTML video.
                         </video>
