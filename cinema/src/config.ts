@@ -4,7 +4,11 @@ interface Config {
     checkRoomEndpoint: string,
     localStorageKeys: {
         roomCode: string,
-    }
+        userName: string,
+    },
+    urlParamKeys: {
+        roomCode: string,
+    },
     hide_controls_timeout: number,
     stats_update_interval: number,
     redirect_target: string,
@@ -15,6 +19,10 @@ const DevConfig: Config = {
     createRoomEndpoint: 'createroom',
     checkRoomEndpoint: 'checkroom',
     localStorageKeys: {
+        roomCode: 'room',
+        userName: 'user',
+    },
+    urlParamKeys: {
         roomCode: 'room'
     },
     hide_controls_timeout: 1500,
@@ -27,6 +35,10 @@ const PrdConfig: Config = {
     createRoomEndpoint: 'createroom',
     checkRoomEndpoint: 'checkroom',
     localStorageKeys: {
+        roomCode: 'room',
+        userName: 'user',
+    },
+    urlParamKeys: {
         roomCode: 'room'
     },
     hide_controls_timeout: 1500,

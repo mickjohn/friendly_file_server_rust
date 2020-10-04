@@ -16,6 +16,7 @@ import { PlayerState } from '../messages';
 interface Props {
     source: string;
     playing: boolean;
+    // currentTime: boolean;
     onPlay?: () => void;
     onPause?: () => void;
     onSeek?: (newTime: number) => void;

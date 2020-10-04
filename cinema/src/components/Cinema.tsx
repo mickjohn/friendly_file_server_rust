@@ -16,14 +16,19 @@ import { removeRoomFromUrl } from '../utils';
 
 
 interface State {
+    // Video player state
     isPlaying: boolean;
+    currentTime: number;
+
+    // Party state
     inParty: boolean;
     isDirector: boolean;
-    // showModal: boolean;
     roomCode: string|undefined;
     name: string;
     connectedUsers: Array<User>;
     directorName: string|undefined;
+
+    // Other state
     showSideWindow: boolean;
 }
 
@@ -39,8 +44,7 @@ function getRoomFromLocalStorage(): string|undefined {
 
 function getRoomFromUrlParams(): string|undefined {
     const urlParams = new URLSearchParams(window.location.search);
-    // TODO store room url param name in config
-    const room = urlParams.get('room') ?? undefined;
+    const room = urlParams.get(Config.urlParamKeys.roomCode) ?? undefined;
     console.debug(`Room in urlParams = '${room}'`);
     return room;
 }
@@ -48,14 +52,12 @@ function getRoomFromUrlParams(): string|undefined {
 class Cinema extends React.Component<Props, State> {
 
     websocket: WebsocketWrapper|undefined;
-    // videoSource: string;
-    justJoined: boolean;
+    catchUpOnJoin: boolean;
 
     constructor(_props: Props) {
         super(_props);
         this.websocket = undefined;
-        // this.videoSource = "http://localhost:5000/browse/4K%20Video%20Downloader/The%20Cure%20-%20A%20Forest%20(Official%20Video).mp4";
-        this.justJoined = false;
+        this.catchUpOnJoin = true;
 
         const roomCode = getRoomFromUrlParams();
         const roomCodeFromStorage = getRoomFromLocalStorage();
@@ -82,10 +84,10 @@ class Cinema extends React.Component<Props, State> {
         this.state = {
             isDirector: isDirector,
             isPlaying: false,
+            currentTime: 0,
             inParty: inParty,
-            // showModal: false,
             roomCode: roomCode,
-            name: window.localStorage.getItem('user') ?? "user",
+            name: window.localStorage.getItem(Config.localStorageKeys.userName) ?? "user",
             connectedUsers: [],
             directorName: undefined,
             showSideWindow: true,
@@ -220,7 +222,7 @@ class Cinema extends React.Component<Props, State> {
                 hideCallback={() => this.setState({showSideWindow: false})}
                 setUserNameCallback={(name) => {
                     this.setState({name: name});
-                    window.localStorage.setItem('user', name);
+                    window.localStorage.setItem(Config.localStorageKeys.userName, name);
                 }}
                 pauseCallback={() => this.setState({isPlaying: false})}
 
@@ -235,36 +237,10 @@ class Cinema extends React.Component<Props, State> {
     }
 
     render() {
-        let partyInfo = null;
-        if (this.state.isDirector) {
-            partyInfo = (
-                <p>
-                    <b>Connected to room {this.state.roomCode}</b>
-                    <br />
-                    You are the director, when you press play the video will play for everyone who is connected.
-                    When you pause it will pause for everyone, etc.
-                </p>
-            );
-        } else if (this.state.inParty) {
-            partyInfo = (
-                <p>
-                    <b>Connected to room {this.state.roomCode}</b>
-                    <br />
-                    Someone else is controlling your video player. The video will play when they press play.
-                </p>
-            );
-        }
-
-
         return (
             <Fragment>
-                {/* <ModalPopup show={this.state.showModal} onClose={() => this.setState({ showModal: false })}>
-                    <CreateRoom roomCreatedCallback={(roomCode) => this.roomCreated(roomCode)} />
-                </ModalPopup> */}
-
                 <div className="cinema-container">
                     {this.getVideoPlayer()}
-                    {/* {partyInfo} */}
                     {this.getSideWindow()}
                 </div>
             </Fragment>
