@@ -4,7 +4,6 @@ import UsersTable from './UsersTable';
 import Config from '../config';
 
 import './SideContent.css';
-import ModalPopup from './ModalPopup';
 
 interface Props {
     roomCreatedCallback: (room: string) => void;

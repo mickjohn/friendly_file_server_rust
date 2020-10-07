@@ -1,13 +1,11 @@
 // Component Imports
 import React, {Fragment } from 'react';
 import VideoPlayer from './VideoPlayer';
-import ModalPopup from './ModalPopup';
-import CreateRoom from './CreateRoom';
 
 // Other classes
 import Config from '../config';
-import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats, PlayerState} from '../messages';
-import User from '../user';
+import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats, PlayerState, Seeked} from '../messages';
+import User, { findDirector } from '../user';
 import WebsocketWrapper from '../websocket';
 
 import './Cinema.css';
@@ -20,12 +18,16 @@ interface State {
     isPlaying: boolean;
     currentTime: number;
 
+    // This is a hacky prop used to inform the VideoPlayer that it's to apply
+    // the current time from the Props.
+    adjustTime: number;
+
     // Party state
     inParty: boolean;
-    isDirector: boolean;
-    roomCode: string|undefined;
+    // isDirector: boolean;
+    // roomCode: string|undefined;
     name: string;
-    connectedUsers: Array<User>;
+    connectedUsers: User[];
     directorName: string|undefined;
 
     // Other state
@@ -34,20 +36,10 @@ interface State {
 
 interface Props {
     videoSource: string;
+    roomCode?: string;
+    isDirector: boolean;
+    setIsDirectorCallback: (isDirector: boolean) => void;
 };
-
-function getRoomFromLocalStorage(): string|undefined {
-    const storedRoom = window.localStorage.getItem(Config.localStorageKeys.roomCode) ?? undefined;
-    console.debug(`Room in localStorage = '${storedRoom}'`);
-    return storedRoom;
-}
-
-function getRoomFromUrlParams(): string|undefined {
-    const urlParams = new URLSearchParams(window.location.search);
-    const room = urlParams.get(Config.urlParamKeys.roomCode) ?? undefined;
-    console.debug(`Room in urlParams = '${room}'`);
-    return room;
-}
 
 class Cinema extends React.Component<Props, State> {
 
@@ -59,38 +51,16 @@ class Cinema extends React.Component<Props, State> {
         this.websocket = undefined;
         this.catchUpOnJoin = true;
 
-        const roomCode = getRoomFromUrlParams();
-        const roomCodeFromStorage = getRoomFromLocalStorage();
-
-        // Only the director has the room code stored. If it equals the room code from the URL Params then this person
-        // is the director.
-        var isDirector = false;
-        if (roomCode === roomCodeFromStorage && roomCode !== undefined) {
-            console.log("Room code in URL matches code in storage, user is director");
-            isDirector = true;
-        } else {
-            // If the codes don't match, remove it.
-            window.localStorage.removeItem(Config.localStorageKeys.roomCode);
-        }
-
-        if (roomCode) {
-            console.log("Room code found in URL, creating websocket connection");
-            this.websocket = this.createWebsocket(roomCode);
-        }
-
-        // If there's a room code in the URL then this person SHOULD be in a party with others.
-        const inParty = roomCode !== undefined;
 
         this.state = {
-            isDirector: isDirector,
             isPlaying: false,
             currentTime: 0,
-            inParty: inParty,
-            roomCode: roomCode,
+            inParty: false,
             name: window.localStorage.getItem(Config.localStorageKeys.userName) ?? "user",
             connectedUsers: [],
             directorName: undefined,
             showSideWindow: true,
+            adjustTime: 0,
         }
     }
 
@@ -106,6 +76,7 @@ class Cinema extends React.Component<Props, State> {
         );
     }
 
+    // The websocket message handler.
     wsMessageReceived(e: MessageEvent) {
         console.log("Received Websocket Message " + e.data);
         const message = parseMessage(JSON.parse(e.data));
@@ -121,6 +92,10 @@ class Cinema extends React.Component<Props, State> {
             case StatsResponses.type: {
                 const statsResonses = message as StatsResponses;
                 const users = statsResonses.responses.map((r) => { return r.toUser()});
+                if (this.catchUpOnJoin) {
+ 
+                }
+
                 this.setState({
                     connectedUsers: users,
                     directorName: statsResonses.director ?? undefined
@@ -139,6 +114,19 @@ class Cinema extends React.Component<Props, State> {
                 this.setState({connectedUsers: users});
                 break;
             }
+            case Seeked.type: {
+                console.log("Received Seeked message");
+                const seeked = message as Seeked;
+                // Only seek if not a director
+                const adjustTime = this.state.adjustTime;
+                if (!this.props.isDirector) {
+                    this.setState({
+                        adjustTime: adjustTime+1,
+                        currentTime: seeked.time,
+                    });
+                }
+                break;
+            }
             default: {
                 console.log(`No action taken for message ${e.data}`);
                 break; 
@@ -146,22 +134,42 @@ class Cinema extends React.Component<Props, State> {
         }
     };
 
-    roomCreated(roomCode: string) {
+    catchUpWithDirector(users: User[]) {
+        const director = findDirector(users);
+        if (director) {
+            console.log("Catching up with the director...");
+            const playing = director.state === PlayerState.Playing;
+            this.setState({
+                currentTime: director.time + 1,
+                adjustTime: this.state.adjustTime + 1,
+                isPlaying: playing,
+            });
+            this.catchUpOnJoin = false;
+        }
+    }
+
+    joinRoom(roomCode: string, director: boolean) {
         const newUrl = `${window.location.origin}${window.location.pathname}?video=${this.props.videoSource}&room=${roomCode}`;
         window.history.replaceState('', '', newUrl);
-        window.localStorage.setItem(Config.localStorageKeys.roomCode, roomCode);
         this.websocket = this.createWebsocket(roomCode);
-        this.setState({isDirector: true, inParty: true, roomCode: roomCode});
+        this.setState({inParty: true});
+        this.props.setIsDirectorCallback(director);
+    }
+
+    onRoomCreated(roomCode: string) {
+        window.localStorage.setItem(Config.localStorageKeys.roomCode, roomCode);
+        this.joinRoom(roomCode, true);
     };
 
+    // Close the websocket and unset all party related state.
     leaveParty() {
         this.setState({
-            isDirector: false,
             inParty: false,
             isPlaying: false,
             connectedUsers: [],
         });
         this.websocket?.close();
+        this.props.setIsDirectorCallback(false);
         removeRoomFromUrl();
     }
 
@@ -172,7 +180,8 @@ class Cinema extends React.Component<Props, State> {
     getVideoPlayer() {
         let onPlay, onPause, onSeek, onTimeInterval;
 
-        if (this.state.inParty && this.state.isDirector) {
+        // In a party and the director
+        if (this.state.inParty && this.props.isDirector) {
             onPlay = () => {
                 console.log("Playing...");
                 const msg: Play = new Play(this.state.name);
@@ -186,22 +195,35 @@ class Cinema extends React.Component<Props, State> {
             };
 
             onTimeInterval = (time: number, playerState: PlayerState) => {
-                this.websocket?.send(new Stats(this.state.name, time, playerState, this.state.isDirector));
+                // On the interval, send this userse stats, and request an update on the users.
+                this.websocket?.send(new Stats(this.state.name, time, playerState, this.props.isDirector));
                 this.websocket?.send(new RequestStats());
             };
 
-            // onSeek = (newTime: number) => { }
+            onSeek = (time: number) => {
+                this.setState({
+                    currentTime: time,
+                    adjustTime: this.state.adjustTime + 1,
+                });
+                this.websocket?.send(new Seeked(this.state.name, time));
+            };
+
+        // Else, when in a party but as a guest
         } else if (this.state.inParty) {
-            onPlay = () => {};
-            onPause = () => {};
             onTimeInterval = (time: number, playerState: PlayerState) => {
-                this.websocket?.send(new Stats(this.state.name, time, playerState, this.state.isDirector));
+                // On the interval, send this userse stats, and request an update on the users.
+                this.websocket?.send(new Stats(this.state.name, time, playerState, this.props.isDirector));
                 this.websocket?.send(new RequestStats());
             };
+
+            // Guests can't play, pause or seek, so make them no-ops
+            onPlay = () => {};
+            onPause = () => {};
+            onSeek = () => {};
         } else {
+            // Otherwise, standard video controls.
             onPlay = () => this.setState({isPlaying: true});
             onPause = () => this.setState({isPlaying: false});
-            onTimeInterval = () => {};
         }
 
         return <VideoPlayer
@@ -209,7 +231,11 @@ class Cinema extends React.Component<Props, State> {
             source={this.props.videoSource}
             onPlay={onPlay}
             onPause={onPause}
+            onSeek={onSeek}
+            adjustTime={this.state.adjustTime}
             onTimeInterval={onTimeInterval}
+            currentTime={this.state.currentTime}
+            setCurrentTimeCallback={(t: number)=> this.setState({currentTime: t})}
         />
     }
 
@@ -217,7 +243,7 @@ class Cinema extends React.Component<Props, State> {
         if (!this.state.showSideWindow) return null;
         return (
             <SideContent 
-                roomCreatedCallback={(roomCode) => this.roomCreated(roomCode)}
+                roomCreatedCallback={(roomCode) => this.onRoomCreated(roomCode)}
                 leaveButtonCallback={() => this.leaveParty()}
                 hideCallback={() => this.setState({showSideWindow: false})}
                 setUserNameCallback={(name) => {
@@ -229,11 +255,17 @@ class Cinema extends React.Component<Props, State> {
                 connectedUsers={this.state.connectedUsers}
                 name={this.state.name}
                 inParty={this.state.inParty}
-                room={this.state.roomCode}
+                room={this.props.roomCode}
                 directorName={this.state.directorName}
-                isDirector={this.state.isDirector}
+                isDirector={this.props.isDirector}
             />
         );
+    }
+
+    componentDidMount() {
+        if (this.props.roomCode) {
+            this.joinRoom(this.props.roomCode, this.props.isDirector);
+        }
     }
 
     render() {

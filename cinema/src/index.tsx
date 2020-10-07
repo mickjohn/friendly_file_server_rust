@@ -1,5 +1,5 @@
 // Component Imports
-import React, { Component, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import Cinema from './components/Cinema';
 import Spinner from './components/Spinner';
@@ -14,9 +14,18 @@ import './index.css';
 interface Props {};
 
 interface State {
+    // The URL of the MP4 to be played
     videoSource: string | undefined;
+
+    // The roomCode. This is taken from the URL params
+    // The roomCode can also be updated by a child component. This will happen
+    // when a user creates a new room.
     roomCode: string | undefined;
-    storageCode: string | undefined;
+    
+    // This person is the director if certain data in localStorage is set
+    isDirector: boolean;
+
+    // The rest of the values are initialisation stuff
     initialising: boolean;
     loadingMessage: string;
     errorMessage: string | undefined;
@@ -26,14 +35,29 @@ interface State {
 class App extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
+
         const params = new URLSearchParams(window.location.search);
+        const storageCode = window.localStorage.getItem(Config.localStorageKeys.roomCode);
+        const roomCode = params.get(Config.urlParamKeys.roomCode) ?? undefined;
+
+        // User is the director is both the storageCode and roomCode are
+        // defined, and are equal to each other
+        const isDirector = (
+            (storageCode !== null)
+            && (roomCode !== undefined)
+            && storageCode === roomCode
+        );
+
+        // If not a director, clean up any existing room codes.
+        if (!isDirector) window.localStorage.removeItem(Config.localStorageKeys.roomCode);
+
         this.state = {
             videoSource: params.get('video') ?? undefined,
-            roomCode: params.get('room') ?? undefined,
-            storageCode: window.localStorage.getItem(Config.localStorageKeys.roomCode) ?? undefined,
+            roomCode: roomCode,
             initialising: true,
             loadingMessage: "Initialising...",
             errorMessage: undefined,
+            isDirector: isDirector,
         }
     }
 
@@ -45,10 +69,7 @@ class App extends React.Component<Props, State> {
             return;
         }
 
-        // If storage code does not match param code, remove it.
-        if (this.state.storageCode && this.state.roomCode !== this.state.storageCode) {
-            window.localStorage.removeItem(Config.localStorageKeys.roomCode);
-        }
+
 
         // Add a minimum time to show spinner for. This is so that the spinner doesn't just flash up on the screen
         // for a split second.
@@ -78,7 +99,6 @@ class App extends React.Component<Props, State> {
                             this.setState({ initialising: false });
                         } else {
                             console.log("Room does not exists");
-                            removeRoomFromUrl();
                             const msg = `Cannot find room '${this.state.roomCode}'`;
                             this.setState({ errorMessage: msg, initialising: false });
                         }
@@ -88,6 +108,10 @@ class App extends React.Component<Props, State> {
                 this.setState({ initialising: false });
             }
         }, 600);
+    }
+
+    isError() {
+        return this.state.errorMessage !== undefined || this.state.initialising;
     }
 
     getErrorElem() {
@@ -101,18 +125,29 @@ class App extends React.Component<Props, State> {
         );
     }
 
-    render() {
-        const isError = this.state.errorMessage !== undefined || this.state.initialising;
-        const video = this.state.videoSource && !isError ? <Cinema videoSource={this.state.videoSource} /> : null;
-        const spinner = this.state.initialising ? <Spinner message={this.state.loadingMessage} /> : null;
+    getVideoElem() {
+        if(!this.state.videoSource || this.isError()) return null;
+        return <Cinema
+            videoSource={this.state.videoSource}
+            setIsDirectorCallback={(isDirector) => {this.setState({isDirector: isDirector})}}
+            isDirector={this.state.isDirector}
+            roomCode={this.state.roomCode}
+        />
+    }
 
+    getSpinner() {
+        if (!this.state.initialising) return null;
+        return <Spinner message={this.state.loadingMessage} />
+    }
+
+    render() {
         return (
             <Fragment>
                 <header>
-                    <h2> Mickjohn.com</h2>
+                    <h2>Mickjohn.com</h2>
                 </header>
-                {video}
-                {spinner}
+                {this.getVideoElem()}
+                {this.getSpinner()}
                 {this.getErrorElem()}
             </Fragment>
         );

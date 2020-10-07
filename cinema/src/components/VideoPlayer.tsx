@@ -16,18 +16,30 @@ import { PlayerState } from '../messages';
 interface Props {
     source: string;
     playing: boolean;
-    // currentTime: boolean;
+    currentTime: number;
+    adjustTime: number;
+
+    // If set, call this instead starting playback
     onPlay?: () => void;
+
+    // If set, call this instead of pausing
     onPause?: () => void;
+
+    // If set, call this instead of setting the current time
     onSeek?: (newTime: number) => void;
+
+    // If set, call this on the interval that used to pass updated to parent component
     onTimeInterval?: (time: number, playerState: PlayerState) => void;
+
+    // Call this with the video player ontimeupdate event handler. Used to update the
+    // current time in the parent component.
+    setCurrentTimeCallback?: (time: number) => void;
 }
 
 interface State {
     playing: boolean;
     volume: number;
     fullscreen: boolean;
-    currentTime: number;
     duration: number;
     showControls: boolean;
 }
@@ -46,6 +58,7 @@ class VideoPlayer extends React.Component<Props, State> {
     hideControlsTimeout: number | undefined;
     lastVolume: number;
     mouseOverControls: boolean;
+    interval: number;
 
     constructor(props: Props) {
         super(props);
@@ -54,11 +67,11 @@ class VideoPlayer extends React.Component<Props, State> {
         this.lastVolume = 1.0;
         this.hideControlsTimeout = undefined;
         this.mouseOverControls = false;
+        this.interval = -1;
         this.state = {
             playing: props.playing,
             volume: 1.0,
             fullscreen: false,
-            currentTime: 0,
             duration: 0,
             showControls: true,
         };
@@ -181,8 +194,10 @@ class VideoPlayer extends React.Component<Props, State> {
             >
                 <ProgressBar
                     max={this.state.duration}
-                    value={this.state.currentTime}
-                    onClick={(p) => this.setCurrentTime(p)}
+                    value={this.props.currentTime}
+                    onClick={(p) => {
+                        this.setCurrentTime(p);
+                    }}
                     progressBarClass={"video-progress"}
                 />
 
@@ -197,7 +212,7 @@ class VideoPlayer extends React.Component<Props, State> {
                         progressBarClass="volume-slider"
                         onClick={(p) => this.setVolume(p)}
                     />
-                    <span>{toMovieTime(this.state.currentTime)} / {toMovieTime(this.state.duration)}</span>
+                    <span>{toMovieTime(this.props.currentTime)} / {toMovieTime(this.state.duration)}</span>
                     {this.getFullscreenButton()}
                 </div>
             </div>
@@ -234,7 +249,6 @@ class VideoPlayer extends React.Component<Props, State> {
             this.lastVolume = this.videoRef.current.volume;
             this.videoRef.current.volume = v;
         }
-
     }
 
     setCurrentTime(progress: number) {
@@ -260,8 +274,7 @@ class VideoPlayer extends React.Component<Props, State> {
                 document.exitFullscreen();
                 this.setState({ fullscreen: false, showControls: true });
             }
-        }
-        else {
+        } else {
             if (this.figureRef.current) {
                 this.figureRef.current.requestFullscreen()
                 this.setState({ fullscreen: true, showControls: true });
@@ -280,7 +293,9 @@ class VideoPlayer extends React.Component<Props, State> {
             videoElem.addEventListener('volumechange', () => this.setState({ volume: videoElem.volume }));
             videoElem.addEventListener('loadedmetadata', () => this.setState({ duration: videoElem.duration }));
             videoElem.addEventListener('timeupdate', () => {
-                this.setState({ currentTime: videoElem.currentTime })
+                if (this.props.setCurrentTimeCallback) {
+                    this.props.setCurrentTimeCallback(videoElem.currentTime);
+                }
             });
 
             if (this.state.playing) {
@@ -297,7 +312,7 @@ class VideoPlayer extends React.Component<Props, State> {
             }
         }
 
-        /* IT's actually the figure element that goes fullscreen, not the video */
+        /* It's actually the figure element that goes fullscreen, not the video */
         const figElem = this.figureRef.current;
         if (figElem !== null) {
             figElem.addEventListener('fullscreenchange', () => this.setState({ fullscreen: document.fullscreenElement !== null }));
@@ -306,9 +321,9 @@ class VideoPlayer extends React.Component<Props, State> {
 
     // Check if the props have updated. If the playing prop has changed then act accordingly
     componentDidUpdate(prevProps: Props) {
+        const videoElem = this.videoRef.current;
         if (this.props.playing !== prevProps.playing) {
-            const videoElem = this.videoRef.current;
-            if (videoElem !== null) {
+            if (videoElem) {
                 if (this.props.playing) {
                     this.playVideo();
                 } else {
@@ -316,8 +331,32 @@ class VideoPlayer extends React.Component<Props, State> {
                 }
             }
         }
+
+        // Updating the current time from props.currentTime causes stuttering.
+        // This adjustTime prop is changed when the Parent component wants to
+        // tell this component that it should update set the video's current
+        // time to props.currentTime
+        if (this.props.adjustTime !== prevProps.adjustTime) {
+            if (videoElem) videoElem.currentTime = this.props.currentTime;
+        }
+
+        if (this.props.onTimeInterval===undefined) {
+            window.clearInterval(this.interval);
+        }
+
+        // Setup the time interval function
+        if (this.props.onTimeInterval !== undefined && prevProps.onTimeInterval === undefined && videoElem) {
+            this.interval = window.setInterval(() => {
+                this.props.onTimeInterval!(videoElem.currentTime, this.getPlayerState());
+            }, Config.stats_update_interval);
+        }
     }
 
+    componentWillUnmount() {
+        if (this.props.onTimeInterval === undefined) {
+            window.clearInterval(this.interval);
+        }
+    }
 
     render() {
         let fullscreen_class = this.state.fullscreen ? "video-container-fullscreen" : ""

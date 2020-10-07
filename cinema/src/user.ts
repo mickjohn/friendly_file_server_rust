@@ -21,4 +21,11 @@ class User {
     }
 }
 
+export function findDirector(users: User[]): User | undefined {
+    for (const user of users) {
+        if (user.director) return user;
+    }
+    return undefined;
+}
+
 export default User;

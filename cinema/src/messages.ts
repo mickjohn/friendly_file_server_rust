@@ -40,11 +40,16 @@ export class Pause {
 export class Seeked {
     static type =  "Seeked";
     type = Seeked.type;
+    name: string;
     time: number;
-    constructor(time: number) { this.time = time }
+
+    constructor(name: string, time: number) {
+        this.name = name;
+        this.time = time;
+    }
 
     toJson() {
-        return `{"type": "${Seeked.type}", "time": ${this.time}}`;
+        return `{"type": "${Seeked.type}","name": "${this.name}","time": ${this.time}}`;
     }
 }
 
@@ -189,7 +194,7 @@ export function parseMessage(msg: any) : Message {
 
     if (type === Play.type) return new Play(msg.name);
     if (type === Pause.type) return new Pause(msg.name);
-    if (type === Seeked.type) return new Seeked(msg['time']);
+    if (type === Seeked.type) return new Seeked(msg.name, msg['time']);
     if (type === Disconnected.type) return new Disconnected(msg['id']);
     if (type === StatsResponse.type) {
         return new StatsResponse(
