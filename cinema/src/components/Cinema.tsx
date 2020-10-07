@@ -148,6 +148,7 @@ class Cinema extends React.Component<Props, State> {
         }
     }
 
+    // Join a room and specify if director or not.
     joinRoom(roomCode: string, director: boolean) {
         const newUrl = `${window.location.origin}${window.location.pathname}?video=${this.props.videoSource}&room=${roomCode}`;
         window.history.replaceState('', '', newUrl);
@@ -156,6 +157,7 @@ class Cinema extends React.Component<Props, State> {
         this.props.setIsDirectorCallback(director);
     }
 
+    // A to call when the room has just been created.
     onRoomCreated(roomCode: string) {
         window.localStorage.setItem(Config.localStorageKeys.roomCode, roomCode);
         this.joinRoom(roomCode, true);

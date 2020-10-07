@@ -1,6 +1,20 @@
 pipeline {
   agent any
   stages {
+    stage('BuildFronend') {
+      steps {
+        sh '''
+          rm -rf static/cinema/
+          cd cinema
+          npm run build
+          cd ..
+          mv cinema/build static/cinema
+          
+
+        '''
+      }
+    }
+
     stage('BuildImage') {
       steps {
         sh '''

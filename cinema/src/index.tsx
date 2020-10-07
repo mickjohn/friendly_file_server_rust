@@ -31,7 +31,6 @@ interface State {
     errorMessage: string | undefined;
 };
 
-
 class App extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -68,8 +67,6 @@ class App extends React.Component<Props, State> {
             this.setState({errorMessage: msg, initialising: false});
             return;
         }
-
-
 
         // Add a minimum time to show spinner for. This is so that the spinner doesn't just flash up on the screen
         // for a split second.
