@@ -25,6 +25,7 @@ export default (props: Props) => {
     const url = `/${Config.createRoomEndpoint}?url=${b64Path}`;
     // const [showModal, setShowModal] = useState(false);
     const [nameInput, setNameInput] = useState(props.name);
+    const [roomCodeInput, setRoomCodeInput] = useState("");
 
     const getUsernameInput = () => {
         return (
@@ -42,6 +43,19 @@ export default (props: Props) => {
             </form>
         );
     }
+
+    // const getRoomCodeInput = () => {
+    //     return (
+    //         <form onSubmit={(e) => e.preventDefault()}>
+    //             <input
+    //                 type="text"
+    //                 onChange={(e) => }
+    //             />
+
+    //         </form>
+
+    //     );
+    // }
 
     const getRoomInfo = () => {
         let msg;

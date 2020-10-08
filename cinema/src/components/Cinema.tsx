@@ -39,6 +39,7 @@ interface Props {
     roomCode?: string;
     isDirector: boolean;
     setIsDirectorCallback: (isDirector: boolean) => void;
+    startingTime?: number;
 };
 
 class Cinema extends React.Component<Props, State> {
@@ -46,15 +47,15 @@ class Cinema extends React.Component<Props, State> {
     websocket: WebsocketWrapper|undefined;
     catchUpOnJoin: boolean;
 
-    constructor(_props: Props) {
-        super(_props);
+    constructor(props: Props) {
+        super(props);
         this.websocket = undefined;
         this.catchUpOnJoin = true;
 
 
         this.state = {
             isPlaying: false,
-            currentTime: 0,
+            currentTime: props.startingTime ?? 0,
             inParty: false,
             name: window.localStorage.getItem(Config.localStorageKeys.userName) ?? "user",
             connectedUsers: [],

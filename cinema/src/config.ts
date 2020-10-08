@@ -5,6 +5,7 @@ interface Config {
     localStorageKeys: {
         roomCode: string,
         userName: string,
+        currentTime: string,
     },
     urlParamKeys: {
         roomCode: string,
@@ -21,6 +22,7 @@ const DevConfig: Config = {
     localStorageKeys: {
         roomCode: 'room',
         userName: 'user',
+        currentTime: 'currentTime',
     },
     urlParamKeys: {
         roomCode: 'room'
@@ -37,6 +39,7 @@ const PrdConfig: Config = {
     localStorageKeys: {
         roomCode: 'room',
         userName: 'user',
+        currentTime: 'currentTime',
     },
     urlParamKeys: {
         roomCode: 'room'

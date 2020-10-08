@@ -58,7 +58,8 @@ class VideoPlayer extends React.Component<Props, State> {
     hideControlsTimeout: number | undefined;
     lastVolume: number;
     mouseOverControls: boolean;
-    interval: number;
+    statsUpdateInterval: number;
+    saveCurrentTimeInterval: number;
 
     constructor(props: Props) {
         super(props);
@@ -67,7 +68,9 @@ class VideoPlayer extends React.Component<Props, State> {
         this.lastVolume = 1.0;
         this.hideControlsTimeout = undefined;
         this.mouseOverControls = false;
-        this.interval = -1;
+        this.statsUpdateInterval = -1;
+        this.saveCurrentTimeInterval = -1;
+
         this.state = {
             playing: props.playing,
             volume: 1.0,
@@ -75,6 +78,16 @@ class VideoPlayer extends React.Component<Props, State> {
             duration: 0,
             showControls: true,
         };
+    }
+
+    saveCurrentTimeToStorage() {
+        const data = {
+            source: this.props.source,
+            currentTime: this.props.currentTime,
+        };
+        const dataString = JSON.stringify(data);
+        const key = Config.localStorageKeys.currentTime;
+        window.localStorage.setItem(key, dataString);
     }
 
 
@@ -297,6 +310,8 @@ class VideoPlayer extends React.Component<Props, State> {
                     this.props.setCurrentTimeCallback(videoElem.currentTime);
                 }
             });
+            videoElem.currentTime = this.props.currentTime;
+
 
             if (this.state.playing) {
                 videoElem.play();
@@ -310,6 +325,8 @@ class VideoPlayer extends React.Component<Props, State> {
                     this.props.onTimeInterval!(videoElem.currentTime, this.getPlayerState());
                 }, Config.stats_update_interval);
             }
+
+            this.saveCurrentTimeInterval = window.setInterval(() => this.saveCurrentTimeToStorage(), 3000);
         }
 
         /* It's actually the figure element that goes fullscreen, not the video */
@@ -341,21 +358,20 @@ class VideoPlayer extends React.Component<Props, State> {
         }
 
         if (this.props.onTimeInterval===undefined) {
-            window.clearInterval(this.interval);
+            window.clearInterval(this.statsUpdateInterval);
         }
 
         // Setup the time interval function
         if (this.props.onTimeInterval !== undefined && prevProps.onTimeInterval === undefined && videoElem) {
-            this.interval = window.setInterval(() => {
+            this.statsUpdateInterval = window.setInterval(() => {
                 this.props.onTimeInterval!(videoElem.currentTime, this.getPlayerState());
             }, Config.stats_update_interval);
         }
     }
 
     componentWillUnmount() {
-        if (this.props.onTimeInterval === undefined) {
-            window.clearInterval(this.interval);
-        }
+        window.clearInterval(this.statsUpdateInterval);
+        window.clearInterval(this.saveCurrentTimeInterval);
     }
 
     render() {

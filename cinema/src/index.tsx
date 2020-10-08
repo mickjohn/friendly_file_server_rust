@@ -10,6 +10,7 @@ import {removeRoomFromUrl} from './utils';
 
 // CSS imports
 import './index.css';
+import { HighlightSpanKind } from 'typescript';
 
 interface Props {};
 
@@ -24,6 +25,9 @@ interface State {
     
     // This person is the director if certain data in localStorage is set
     isDirector: boolean;
+
+    // The time to start the video playback at
+    startingTime: number;
 
     // The rest of the values are initialisation stuff
     initialising: boolean;
@@ -57,7 +61,26 @@ class App extends React.Component<Props, State> {
             loadingMessage: "Initialising...",
             errorMessage: undefined,
             isDirector: isDirector,
+            startingTime: 0,
         }
+    }
+
+    getStartingTime(): number {
+        const key = Config.localStorageKeys.currentTime;
+        const dataString = window.localStorage.getItem(key);
+        if (dataString) {
+            const data = JSON.parse(dataString);
+            const source = data['source'];
+            const currentTime = data['currentTime'];
+            if (source !== undefined && currentTime !== undefined) {
+                if (source === this.state.videoSource) {
+                    return currentTime;
+                } 
+            }
+        }
+        // Remove item if it's for a diffent video.
+        window.localStorage.removeItem(key);
+        return 0;
     }
 
     componentDidMount() {
@@ -67,6 +90,10 @@ class App extends React.Component<Props, State> {
             this.setState({errorMessage: msg, initialising: false});
             return;
         }
+
+        // Retrieve the current time for this video;
+        // TODO - move this to the constructor?
+        this.setState({startingTime: this.getStartingTime()});
 
         // Add a minimum time to show spinner for. This is so that the spinner doesn't just flash up on the screen
         // for a split second.
@@ -129,6 +156,7 @@ class App extends React.Component<Props, State> {
             setIsDirectorCallback={(isDirector) => {this.setState({isDirector: isDirector})}}
             isDirector={this.state.isDirector}
             roomCode={this.state.roomCode}
+            startingTime={this.state.startingTime}
         />
     }
 
