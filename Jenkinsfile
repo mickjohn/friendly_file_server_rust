@@ -4,11 +4,23 @@ pipeline {
     stage('BuildFronend') {
       steps {
         sh '''
+          # Source the profile script that adds npm & node to the PATH
           source /etc/profile.d/nodejs.sh
-          rm -rf ./static/cinema/
+
+          # Navigate to the cinema directory
           pushd ./cinema
+
+          # Install the dependencies
+          npm install
+
+          # Build a production build of the app
           npm run build
           popd 
+
+          # Remove existing build from static content directory
+          rm -rf ./static/cinema/
+
+          # Move the new build into it
           mv ./cinema/build static/cinema
         '''
       }
