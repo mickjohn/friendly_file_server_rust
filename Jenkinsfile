@@ -4,13 +4,12 @@ pipeline {
     stage('BuildFronend') {
       steps {
         sh '''
-          rm -rf static/cinema/
-          cd cinema
+          source /etc/profile.d/nodejs.sh
+          rm -rf ./static/cinema/
+          pushd ./cinema
           npm run build
-          cd ..
-          mv cinema/build static/cinema
-          
-
+          popd 
+          mv ./cinema/build static/cinema
         '''
       }
     }
