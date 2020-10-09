@@ -208,6 +208,8 @@ class Cinema extends React.Component<Props, State> {
                     currentTime: time,
                     adjustTime: this.state.adjustTime + 1,
                 });
+                // Pause on Seek. This is to allow the director to wait for people to catch up.
+                this.websocket?.send(new Pause(this.state.name));
                 this.websocket?.send(new Seeked(this.state.name, time));
             };
 
