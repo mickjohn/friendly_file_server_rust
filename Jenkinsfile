@@ -14,6 +14,7 @@ pipeline {
           npm install
 
           # Build a production build of the app
+          export INLINE_RUNTIME_CHUNK=false
           npm run build
           popd 
 
