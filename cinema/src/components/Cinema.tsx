@@ -94,7 +94,7 @@ class Cinema extends React.Component<Props, State> {
                 const statsResonses = message as StatsResponses;
                 const users = statsResonses.responses.map((r) => { return r.toUser()});
                 if (this.catchUpOnJoin) {
- 
+                    this.catchUpWithDirector(users);
                 }
 
                 this.setState({

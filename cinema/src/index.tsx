@@ -10,7 +10,6 @@ import {removeRoomFromUrl} from './utils';
 
 // CSS imports
 import './index.css';
-import { HighlightSpanKind } from 'typescript';
 
 interface Props {};
 
@@ -92,8 +91,14 @@ class App extends React.Component<Props, State> {
         }
 
         // Retrieve the current time for this video;
+        // If the user is in a party, and NOT the director then ignore this
         // TODO - move this to the constructor?
-        this.setState({startingTime: this.getStartingTime()});
+        if (
+            (this.state.roomCode && this.state.isDirector)
+            || (!this.state.roomCode)
+        ) {
+            this.setState({ startingTime: this.getStartingTime() });
+        }
 
         // Add a minimum time to show spinner for. This is so that the spinner doesn't just flash up on the screen
         // for a split second.

@@ -10,6 +10,10 @@ pipeline {
           # Navigate to the cinema directory
           pushd ./cinema
 
+          # HACK ALERT
+          # Update the value of the Config export from Dev to Prd
+          sed -i 's/export default DevConfig;/export default PrdConfig;/g' src/config.ts
+
           # Install the dependencies
           npm install
 
