@@ -6,7 +6,7 @@ import VideoPlayer from './VideoPlayer';
 import Config from '../config';
 import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats, PlayerState, Seeked} from '../messages';
 import User, { findDirector } from '../user';
-import WebsocketWrapper from '../websocket';
+import WebsocketWrapper from '../websocket-wrapper';
 
 import './Cinema.css';
 import SideContent from './SideContent';
