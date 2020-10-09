@@ -49,4 +49,4 @@ const PrdConfig: Config = {
     redirect_target: '/browse',
 }
 
-export default DevConfig;
+export default PrdConfig;
