@@ -1,5 +1,3 @@
-use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery};
-use super::filters::Authenticated;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use warp::path::FullPath;
@@ -7,6 +5,11 @@ use warp::http::Uri;
 use url::form_urlencoded::parse;
 use rand::Rng;
 use base64::decode;
+use tokio::task;
+
+use super::websocket::delete_from_rooms;
+use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery, RoomCodeQuery, RoomCleaner};
+use super::filters::Authenticated;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ROOM_CODE_LEN: usize = 4;
@@ -74,28 +77,48 @@ fn generate_room_code() -> String {
         .collect()
 }
 
-pub async fn create_room(_: Authenticated, rooms: Rooms, urls: Urls, b64url: UrlQuery) -> Result<impl warp::Reply, warp::Rejection> {
+pub async fn create_room(_: Authenticated, rooms_arc: Rooms, cleaner: RoomCleaner, urls: Urls, b64url: UrlQuery) -> Result<impl warp::Reply, warp::Rejection> {
     use std::str::from_utf8;
     let mut code;
     let decoded = decode(b64url.url.as_bytes()).map_err(|_| warp::reject())?;
     let url = from_utf8(decoded.as_slice()).map_err(|_| warp::reject())?;
 
-    let mut rooms = rooms.lock().await;
-    let mut urls = urls.lock().await;
+    // Extra scope to limit length of rooms and urls mutex lock
+    {
+        let mut rooms = rooms_arc.lock().await;
+        let mut urls = urls.lock().await;
 
-    loop {
-        code = generate_room_code();
-        if !rooms.contains_key(&code) {
-            break;
+        loop {
+            code = generate_room_code();
+            if !rooms.contains_key(&code) {
+                break;
+            }
         }
+        let url_with_query = format!("{}?cinema=1&room={}", url, code);
+        let room = Room::new(code.clone());
+        rooms.insert(code.clone(), room);
+        urls.insert(code.clone(), url_with_query.to_owned());
     }
-    let url_with_query = format!("{}?cinema=1&room={}", url, code);
-    let room = Room::new(code.clone());
-    rooms.insert(code.clone(), room);
-    urls.insert(code.clone(), url_with_query.to_owned());
 
     let mut resp_map = HashMap::new();
-    resp_map.insert("room", code);
+    resp_map.insert("room", code.clone());
+
+    // Start the task to delete the room, in case no one joins it.
+    task::spawn(async {
+        delete_from_rooms(rooms_arc, cleaner, code).await;//.await;
+    });
+
+    Ok(warp::reply::json(&resp_map))
+}
+
+pub async fn check_room(_: Authenticated, rooms: Rooms, room_code: RoomCodeQuery) -> Result<impl warp::Reply, warp::Rejection> {
+    let mut resp_map = HashMap::new();
+    let rooms = rooms.lock().await;
+    if rooms.contains_key(&room_code.room) {
+        resp_map.insert("exists", true);
+    } else {
+        resp_map.insert("exists", false);
+    }
     Ok(warp::reply::json(&resp_map))
 }
 

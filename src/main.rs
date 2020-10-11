@@ -20,10 +20,11 @@ mod webserver;
 
 use crate::webserver::{models, filters, websocket};
 
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "info");
+        env::set_var("RUST_LOG", "friendly_file_server_rust=debug");
     }
     pretty_env_logger::init();
 
@@ -38,6 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let hba = models::new_handlebars_arc();
     let users = models::new_users(config.users.clone());
     let rooms = models::Rooms::default();
+    let room_cleaner = models::new_room_cleaner();
     let urls = models::Urls::default();
 
 
@@ -51,7 +53,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         .map(|_ : filters::Authenticated, file| file);
 
     // The endpoint used to create a Websocket cinema room
-    let create_room = filters::create_room_filter(users.clone(), rooms.clone(), urls.clone());
+    let create_room = filters::create_room_filter(users.clone(), rooms.clone(), room_cleaner.clone(), urls.clone());
+
+    // Endpoint to check if room exists
+    let check_room = filters::check_room_filter(users.clone(), rooms.clone());
 
     // The endpoint to serve files. Should be used AFTER the 'api' filter, in order 
     // to ensure that Directories get rendered as an index, and that this serves 
@@ -68,8 +73,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .and(warp::path::end())
                     .and(warp::ws())
                     .and(filters::with_rooms(rooms))
-                    .map(|code: String, ws: warp::ws::Ws, rooms: models::Rooms| {
-                        ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms))
+                    .and(filters::with_room_cleaner(room_cleaner))
+                    .map(|code: String, ws: warp::ws::Ws, rooms: models::Rooms, cleaner: models::RoomCleaner| {
+                        ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms, cleaner))
                     });
 
     // Redirect index to browse endpoint
@@ -81,6 +87,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
                    .or(create_room.recover(filters::recover_auth))
+                   .or(check_room.recover(filters::recover_auth))
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
@@ -88,6 +95,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(redirect);
 
     // Start up the server...
+    info!("Serving routes...");
     warp::serve(routes).run((config.ipaddr, config.port)).await;
     Ok(())
 }

@@ -1,7 +1,7 @@
 use crate::verify;
 use super::handlers;
 use super::rejections;
-use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery};
+use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery, RoomCleaner};
 
 use warp::Filter;
 use warp::http::StatusCode;
@@ -42,6 +42,7 @@ pub fn render_cinema_page<'a>(
 pub fn create_room_filter(
     users: UserMap,
     rooms: Rooms,
+    rooms_cleaner: RoomCleaner,
     urls: Urls,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path("createroom")
@@ -49,9 +50,23 @@ pub fn create_room_filter(
         .and(warp::get())
         .and(auth(users))
         .and(with_rooms(rooms))
+        .and(with_room_cleaner(rooms_cleaner))
         .and(with_urls(urls))
         .and(warp::query::<UrlQuery>())
         .and_then(handlers::create_room)
+}
+
+pub fn check_room_filter(
+    users: UserMap,
+    rooms: Rooms,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path("checkroom")
+        .and(warp::path::end())
+        .and(warp::get())
+        .and(auth(users))
+        .and(with_rooms(rooms))
+        .and(warp::query::<RoomCodeQuery>())
+        .and_then(handlers::check_room)
 }
 
 pub fn wwf_redirect(
@@ -81,9 +96,14 @@ pub fn with_rooms(rooms: Rooms) -> impl Filter<Extract = (Rooms,), Error = std::
     warp::any().map(move || rooms.clone())
 }
 
+pub fn with_room_cleaner(cleaner: RoomCleaner) -> impl Filter<Extract = (RoomCleaner,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || cleaner.clone())
+}
+
 fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || urls.clone())
 }
+
 
 pub fn auth(users: UserMap) -> impl Filter<Extract = (Authenticated,), Error = warp::Rejection> + Clone {
     warp::header::<String>("Authorization")

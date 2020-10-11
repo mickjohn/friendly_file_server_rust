@@ -1,6 +1,36 @@
 pipeline {
   agent any
   stages {
+    stage('BuildFronend') {
+      steps {
+        sh '''
+          # Source the profile script that adds npm & node to the PATH
+          source /etc/profile.d/nodejs.sh
+
+          # Navigate to the cinema directory
+          pushd ./cinema
+
+          # HACK ALERT
+          # Update the value of the Config export from Dev to Prd
+          sed -i 's/export default DevConfig;/export default PrdConfig;/g' src/config.ts
+
+          # Install the dependencies
+          npm install
+
+          # Build a production build of the app
+          export INLINE_RUNTIME_CHUNK=false
+          npm run build
+          popd 
+
+          # Remove existing build from static content directory
+          rm -rf ./static/cinema/
+
+          # Move the new build into it
+          mv ./cinema/build static/cinema
+        '''
+      }
+    }
+
     stage('BuildImage') {
       steps {
         sh '''

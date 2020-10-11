@@ -1,0 +1,108 @@
+
+/* The figure contains div that contains the video and the controls */
+.video-container > figure {
+    margin: 10px auto;
+    padding: 0 0 0 10px;
+}
+
+.video-container video {
+    width: 50vw;
+    /* max-width: 98%; */
+    margin: 0 auto;
+    display: block;
+}
+
+.video-and-controls {
+    display: inline-block;
+    position: relative;
+}
+
+/* Progress bar and media button container */
+.controls {
+    color: white;
+    width: 95%;
+    padding: 9px 5px 8px 5px;
+    margin-left: 10px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Add some space around the elements */
+.controls > div > div
+, .volume-slider
+, .controls > div > button {
+    margin-right: 20px;
+}
+
+/* Make the last button stay to the right of the controls */
+.controls > div > button:last-child {
+    margin-left: auto;
+}
+
+.video-progress progress {
+    cursor: pointer;
+    width: 100%;
+    background: #5f5f5f;
+    height: 5px;
+    margin-bottom: 10px;
+    border: 0;
+}
+
+.video-progress progress:hover {
+    background: #b6b6b6;
+    height: 15px;
+    margin-bottom: 5px;
+}
+
+/* Media Button container */
+.controls > div {
+    display: flex;
+}
+
+/* Media Button Icons */
+.controls > div > button > img {
+    width: 30px;
+    height: 30px;
+}
+
+/* Media Buttons */
+.controls > div > button {
+    background: transparent;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    /* margin: 0; */
+    cursor: pointer;
+}
+
+.volume-slider progress {
+    cursor: pointer;
+    border: 0;
+    height: 10px;
+}
+
+
+/* Fullscreen styling */
+
+.video-container-fullscreen figure {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.video-container-fullscreen video {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    margin: 0;
+}
+
+.video-container-fullscreen .video-and-controls {
+    width: 100%;
+}

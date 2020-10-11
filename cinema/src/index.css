@@ -1,0 +1,44 @@
+body {
+    /* color: #e5e9f0; */
+    color: #505050;
+    font-family: "Helvetica", "Arial", sans-serif;
+    background-color: #f9f9f9;
+    padding: 0;
+    margin: 0;
+}
+
+header {
+    text-align: center;
+    border-bottom: 1px solid red;
+}
+
+header > h2 {
+    margin: 0;
+    padding: 10px;
+}
+
+.error-message {
+    color: #555555;
+    margin: auto auto;
+    max-width: 300px;
+    border: 2px solid rgb(214, 91, 91);
+    border-radius: 3px;
+    padding: 8px;
+    margin-top: 10vh;
+    background-color: white;
+    text-align: center;
+}
+
+.error-message h2 {
+    color: rgb(179, 69, 69);
+}
+
+.error-message a, a:visited {
+    color: #555;
+    text-decoration: none;
+}
+
+.error-message a:hover {
+    color: rgb(77, 154, 216);
+    text-decoration: underline;
+}
