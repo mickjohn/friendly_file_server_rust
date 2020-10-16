@@ -28,7 +28,7 @@ const DevConfig: Config = {
         roomCode: 'room'
     },
     hide_controls_timeout: 1500,
-    stats_update_interval: 500,
+    stats_update_interval: 200,
     redirect_target: '/browse',
 }
 
@@ -45,7 +45,7 @@ const PrdConfig: Config = {
         roomCode: 'room'
     },
     hide_controls_timeout: 1500,
-    stats_update_interval: 500,
+    stats_update_interval: 200,
     redirect_target: '/browse',
 }
 

@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from 'react';
+import { motion, useAnimation } from "framer-motion";
 import User from '../user';
 import UsersTable from './UsersTable';
 import Config from '../config';
@@ -11,6 +12,8 @@ interface Props {
     leaveButtonCallback: () => void;
     pauseCallback: () => void;
     setUserNameCallback: (name: string) => void;
+
+    showSideWindow: boolean;
     connectedUsers: User[];
     name: string;
     inParty: boolean;
@@ -23,9 +26,7 @@ interface Props {
 export default (props: Props) => {
     const b64Path = btoa(window.location.pathname);
     const url = `/${Config.createRoomEndpoint}?url=${b64Path}`;
-    // const [showModal, setShowModal] = useState(false);
     const [nameInput, setNameInput] = useState(props.name);
-    const [roomCodeInput, setRoomCodeInput] = useState("");
 
     const getUsernameInput = () => {
         return (
@@ -39,23 +40,11 @@ export default (props: Props) => {
                 />
                 <button onClick={(_e) => props.setUserNameCallback(nameInput)}>
                     Set username
-                        </button>
+                </button>
             </form>
         );
     }
 
-    // const getRoomCodeInput = () => {
-    //     return (
-    //         <form onSubmit={(e) => e.preventDefault()}>
-    //             <input
-    //                 type="text"
-    //                 onChange={(e) => }
-    //             />
-
-    //         </form>
-
-    //     );
-    // }
 
     const getRoomInfo = () => {
         let msg;
@@ -113,27 +102,6 @@ export default (props: Props) => {
         );
     }
 
-    // const getUsernameModal = () => {
-    //     return (
-    //         <ModalPopup
-    //             onClose={() => setShowModal(false)}
-    //             show={showModal}
-    //             classNamePrefix="side-content-"
-    //         >
-    //             <div>
-    //                 <h5>Enter username</h5>
-    //                 <form onSubmit={(e) => e.preventDefault()}>
-    //                     <input
-    //                         onChange={(e) => setNameInput(e.target.value)}
-    //                         maxLength={20}
-    //                         minLength={1}
-    //                     />
-    //                 </form>
-    //             </div>
-    //         </ModalPopup>
-    //     );
-    // }
-
     const getUsersTable = () => {
         if (!props.inParty) return null;
         return <UsersTable users={props.connectedUsers} />;
@@ -143,10 +111,7 @@ export default (props: Props) => {
         if (props.roomCreatedCallback) props.roomCreatedCallback(result.room);
     }
 
-    const roomCreationError = (_e: any) => {
-        // setShowCreateButton(false);
-        // setShowError(true);
-    }
+    const roomCreationError = (_e: any) => { }
 
     const sendCreateRequest = () => {
         fetch(url)
@@ -165,15 +130,32 @@ export default (props: Props) => {
 
     const header = props.inParty ? getRoomInfo() : getCreatePartyInfo();
 
+
+    const animation = useAnimation()
+    async function playHideSequence() {
+        await animation.start({ opacity: 0, transition: { duration: 0.5 } });
+        await animation.start({ width: 0 });
+    }
+
+    async function playShowSequence() {
+        await animation.start({ width: 300 });
+        await animation.start({ opacity: 1, transition: { duration: 0.5 } });
+    }
+
+    if (props.showSideWindow) {
+        playShowSequence();
+    } else {
+        playHideSequence();
+    }
+
     return (
-        <div className="side-content">
-            {/* {getUsernameModal()} */}
+        <motion.div animate={animation} className="side-content">
             <div className="side-content-header">
                 {header}
             </div>
             <div className="side-content-main">
                 {getUsersTable()}
             </div>
-        </div>
+        </motion.div>
     );
 }

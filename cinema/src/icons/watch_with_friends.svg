@@ -1,0 +1,28 @@
+<svg width="512mm" height="512mm" version="1.1" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <clipPath id="clipPath845">
+   <rect x="-15.875" y="256.27" width="337.15" height="151.95" ry="0" fill="#ffd42a" stroke="#000" stroke-width=".387"/>
+  </clipPath>
+  <clipPath id="clipPath845-1">
+   <rect x="-15.875" y="256.27" width="337.15" height="151.95" ry="0" fill="#ffd42a" stroke="#000" stroke-width=".387"/>
+  </clipPath>
+  <clipPath id="clipPath845-1-9">
+   <rect x="-15.875" y="256.27" width="337.15" height="151.95" ry="0" fill="#ffd42a" stroke="#000" stroke-width=".387"/>
+  </clipPath>
+ </defs>
+ <g stroke="#000">
+  <path transform="matrix(.99358 0 0 .7367 -33.254 10.75)" d="m383.17 118.99-194.21 112.13v-224.26z" fill="#008000" stroke-width=".387"/>
+  <g transform="matrix(.85663 0 0 .85663 202.18 20.479)" fill="#6c5d53">
+   <rect transform="matrix(.88233 0 0 1 101.69 95.855)" x="23.502" y="257.85" width="253.86" height="209.26" ry="77.305" clip-path="url(#clipPath845-1)" stroke-width=".52212"/>
+   <circle cx="232.6" cy="279.55" r="63.223" stroke-width=".34432"/>
+  </g>
+  <g transform="matrix(.85663 0 0 .85663 -96.792 30.522)" fill="#483e37">
+   <rect transform="matrix(.88233 0 0 1 101.69 95.855)" x="23.502" y="257.85" width="253.86" height="209.26" ry="77.305" clip-path="url(#clipPath845-1-9)" stroke-width=".52212"/>
+   <circle cx="232.6" cy="279.55" r="63.223" stroke-width=".34432"/>
+  </g>
+ </g>
+ <g transform="translate(21.702 -2.2451)" fill="#241f1c" stroke="#000">
+  <rect transform="matrix(.88233 0 0 1 101.69 95.855)" x="23.502" y="257.85" width="253.86" height="209.26" ry="77.305" clip-path="url(#clipPath845)" stroke-width=".52212"/>
+  <circle cx="232.6" cy="279.55" r="63.223" stroke-width=".34432"/>
+ </g>
+</svg>

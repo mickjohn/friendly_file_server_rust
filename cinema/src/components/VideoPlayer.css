@@ -1,13 +1,17 @@
+.video-container {
+    background-color: white;
+    border: 2px solid #e0e0e0;
+    margin: 10px;
+}
 
 /* The figure contains div that contains the video and the controls */
 .video-container > figure {
     margin: 10px auto;
-    padding: 0 0 0 10px;
+    padding: 5px;
 }
 
 .video-container video {
     width: 50vw;
-    /* max-width: 98%; */
     margin: 0 auto;
     display: block;
 }
@@ -20,13 +24,14 @@
 /* Progress bar and media button container */
 .controls {
     color: white;
-    width: 95%;
-    padding: 9px 5px 8px 5px;
-    margin-left: 10px;
+    padding: 9px 15px 8px 15px;
+    margin: 0;
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
+    background: rgb(101,46,27);
+    background: linear-gradient(180deg, rgba(101,46,27,0) 0%, rgba(0,0,0,1) 50%);
 }
 
 /* Add some space around the elements */
@@ -44,7 +49,6 @@
 .video-progress progress {
     cursor: pointer;
     width: 100%;
-    background: #5f5f5f;
     height: 5px;
     margin-bottom: 10px;
     border: 0;
@@ -74,7 +78,6 @@
     height: 30px;
     padding: 0;
     border: 0;
-    /* margin: 0; */
     cursor: pointer;
 }
 
@@ -84,6 +87,20 @@
     height: 10px;
 }
 
+.video-bottom-info {
+    display: flex;
+    flex-direction: row;
+    padding: 15px 2px 15px 8px;
+}
+
+.video-bottom-info > button {
+    margin-left: auto;
+}
+
+.video-bottom-info img {
+    width: 40px;
+    height: 40px;
+}
 
 /* Fullscreen styling */
 

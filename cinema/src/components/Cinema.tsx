@@ -24,8 +24,6 @@ interface State {
 
     // Party state
     inParty: boolean;
-    // isDirector: boolean;
-    // roomCode: string|undefined;
     name: string;
     connectedUsers: User[];
     directorName: string|undefined;
@@ -39,6 +37,7 @@ interface Props {
     roomCode?: string;
     isDirector: boolean;
     setIsDirectorCallback: (isDirector: boolean) => void;
+    setRoomCodeCallback: (roomCode: string) => void;
     startingTime?: number;
 };
 
@@ -79,7 +78,6 @@ class Cinema extends React.Component<Props, State> {
 
     // The websocket message handler.
     wsMessageReceived(e: MessageEvent) {
-        console.log("Received Websocket Message " + e.data);
         const message = parseMessage(JSON.parse(e.data));
         switch(message.type) {
             case Play.type: {
@@ -158,12 +156,6 @@ class Cinema extends React.Component<Props, State> {
         this.props.setIsDirectorCallback(director);
     }
 
-    // A to call when the room has just been created.
-    onRoomCreated(roomCode: string) {
-        window.localStorage.setItem(Config.localStorageKeys.roomCode, roomCode);
-        this.joinRoom(roomCode, true);
-    };
-
     // Close the websocket and unset all party related state.
     leaveParty() {
         this.setState({
@@ -176,10 +168,8 @@ class Cinema extends React.Component<Props, State> {
         removeRoomFromUrl();
     }
 
-    /*
-    Create the VideoPlayer component and configure it according to if and how the user
-    is connected to the party.
-    */
+    // Create the VideoPlayer component and configure it according to if and how the user
+    // is connected to the party.
     getVideoPlayer() {
         let onPlay, onPause, onSeek, onTimeInterval;
 
@@ -234,6 +224,8 @@ class Cinema extends React.Component<Props, State> {
         return <VideoPlayer
             playing={this.state.isPlaying}
             source={this.props.videoSource}
+            showPartyButton={!this.state.showSideWindow}
+            partyButtonOnClick={() => this.setState({showSideWindow: true})}
             onPlay={onPlay}
             onPause={onPause}
             onSeek={onSeek}
@@ -245,10 +237,13 @@ class Cinema extends React.Component<Props, State> {
     }
 
     getSideWindow() {
-        if (!this.state.showSideWindow) return null;
+        // if (!this.state.showSideWindow) return null;
         return (
             <SideContent 
-                roomCreatedCallback={(roomCode) => this.onRoomCreated(roomCode)}
+                roomCreatedCallback={(roomCode) => {
+                    this.props.setRoomCodeCallback(roomCode);
+                    this.props.setIsDirectorCallback(true);
+                }}
                 leaveButtonCallback={() => this.leaveParty()}
                 hideCallback={() => this.setState({showSideWindow: false})}
                 setUserNameCallback={(name) => {
@@ -257,6 +252,7 @@ class Cinema extends React.Component<Props, State> {
                 }}
                 pauseCallback={() => this.setState({isPlaying: false})}
 
+                showSideWindow={this.state.showSideWindow}
                 connectedUsers={this.state.connectedUsers}
                 name={this.state.name}
                 inParty={this.state.inParty}
@@ -265,6 +261,13 @@ class Cinema extends React.Component<Props, State> {
                 isDirector={this.props.isDirector}
             />
         );
+    }
+
+    componentDidUpdate(prevProps: Props) {
+        if (this.props.roomCode && this.props.roomCode !== prevProps.roomCode) {
+            this.joinRoom(this.props.roomCode, this.props.isDirector);
+        }
+
     }
 
     componentDidMount() {

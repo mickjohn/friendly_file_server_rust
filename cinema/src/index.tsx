@@ -158,7 +158,8 @@ class App extends React.Component<Props, State> {
         if(!this.state.videoSource || this.isError()) return null;
         return <Cinema
             videoSource={this.state.videoSource}
-            setIsDirectorCallback={(isDirector) => {this.setState({isDirector: isDirector})}}
+            setIsDirectorCallback={(isDirector) => this.setState({isDirector: isDirector})}
+            setRoomCodeCallback={(roomCode) => this.setState({roomCode: roomCode})}
             isDirector={this.state.isDirector}
             roomCode={this.state.roomCode}
             startingTime={this.state.startingTime}

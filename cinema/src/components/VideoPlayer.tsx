@@ -1,23 +1,20 @@
 import React from 'react';
-
+import Config from '../config';
 import ProgressBar from './ProgressBar';
 
 // Resources
 import './VideoPlayer.css';
-import PlayIcon from '../icons/play_icon.svg';
-import PauseIcon from '../icons/pause_icon.svg';
-import FullScreenIcon from '../icons/fullscreen.svg';
-import ExitFullScreenIcon from '../icons/exit_fullscreen.svg';
-import VolumeMutedIcon from '../icons/volume_muted.svg';
-import VolumeIcon from '../icons/volume_icon.svg';
-import Config from '../config';
 import { PlayerState } from '../messages';
+import ControlButton from './ControlButton';
+import ShowSidebar from '../icons/watch_with_friends.svg';
 
 interface Props {
     source: string;
     playing: boolean;
     currentTime: number;
     adjustTime: number;
+    showPartyButton: boolean;
+    partyButtonOnClick: () => void;
 
     // If set, call this instead starting playback
     onPlay?: () => void;
@@ -60,6 +57,7 @@ class VideoPlayer extends React.Component<Props, State> {
     mouseOverControls: boolean;
     statsUpdateInterval: number;
     saveCurrentTimeInterval: number;
+    filename: string;
 
     constructor(props: Props) {
         super(props);
@@ -70,6 +68,8 @@ class VideoPlayer extends React.Component<Props, State> {
         this.mouseOverControls = false;
         this.statsUpdateInterval = -1;
         this.saveCurrentTimeInterval = -1;
+        const filenameParts = this.props.source.split('/');
+        this.filename = filenameParts[filenameParts.length - 1];
 
         this.state = {
             playing: props.playing,
@@ -155,47 +155,24 @@ class VideoPlayer extends React.Component<Props, State> {
         }
     }
 
-
     getPlayPauseButton() {
-        const playing = this.state.playing;
-        const btn_conf = {
-            alt: playing ? 'Pause': 'Play',
-            src: playing ? PauseIcon : PlayIcon,
-        };
-
-        return (
-            <button id="playpause" onClick={() => {playing ? this.onPauseClicked() : this.onPlayClicked()}}>
-                <img alt={btn_conf.alt} src={btn_conf.src}/>
-            </button>
-        );
+        if (this.state.playing) {
+            return <ControlButton type='pause' onClick={() => this.onPauseClicked() } />;
+        } else {
+            return <ControlButton type='play' onClick={() => this.onPlayClicked() } />;
+        }
     }
 
     getVolumeButton() {
         const muted = this.videoRef.current && this.videoRef.current.volume === 0;
+        const volumeType = muted ? 'volume' : 'mutevolume';
         const vol = muted ? this.lastVolume : 0;
-        const icon = muted ? VolumeMutedIcon : VolumeIcon;
-
-        return (
-            <button onClick={() => this.setVolume(vol)}>
-                <img src={icon} alt="unmute" />
-            </button>
-        );
+        return <ControlButton type={volumeType} onClick={() => this.setVolume(vol)}/>;
     }
 
     getFullscreenButton() {
-        const fullscreen = this.state.fullscreen;
-        const icon = fullscreen ? ExitFullScreenIcon : FullScreenIcon;
-        const alt = fullscreen ? "Exit Fullsceen" : "Enter Fullscreen";
-
-        return (
-            <button id="fullscreen">
-                <img
-                    src={icon}
-                    alt={alt}
-                    onClick={() => this.handleFullscreen()}
-                />
-            </button>
-        );
+        const fullscreenType = this.state.fullscreen ? 'exitfullscreen' : 'fullscreen';
+        return <ControlButton type={fullscreenType} onClick={() => this.handleFullscreen()}/>;
     }
 
     getControls() {
@@ -404,6 +381,10 @@ class VideoPlayer extends React.Component<Props, State> {
                         {controls}
                     </div>
                 </figure>
+                <div className="video-bottom-info">
+                    <h3>{ this.filename }</h3>
+                    {this.props.showPartyButton && <button onClick={() => this.props.partyButtonOnClick()}><img alt="watch with friends" src={ShowSidebar}/></button>}
+                </div>
             </div>
         );
     }
