@@ -276,6 +276,10 @@ class Cinema extends React.Component<Props, State> {
         }
     }
 
+    componentWillUnmount() {
+        this.websocket?.close();
+    }
+
     render() {
         return (
             <Fragment>

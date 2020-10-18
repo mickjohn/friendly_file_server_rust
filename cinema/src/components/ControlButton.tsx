@@ -11,44 +11,42 @@ import VolumeIcon from '../icons/volume_icon.svg';
 
 
 interface Props {
-    type: "play" | "pause" | "fullscreen" | "exitfullscreen" | "volume" | "mutevolume";
+    type: "play"
+        | "playdisabled"
+        | "pause"
+        | "pausedisabled"
+        | "fullscreen"
+        | "exitfullscreen"
+        | "volume"
+        | "mutevolume";
     onClick: () => void;
 }
 
+interface BtnProps {
+    alt: string,
+    src: string
+}
+
 interface BtnConfig {
-    play: {alt: string, src: string},
-    pause: {alt: string, src: string},
-    fullscreen: {alt: string, src: string},
-    exitfullscreen: {alt: string, src: string},
-    volume: {alt: string, src: string},
-    mutevolume: {alt: string, src: string},
+    play: BtnProps,
+    playdisabled: BtnProps,
+    pause: BtnProps,
+    pausedisabled: BtnProps,
+    fullscreen: BtnProps,
+    exitfullscreen: BtnProps,
+    volume: BtnProps,
+    mutevolume: BtnProps,
 }
 
 const btnConfig: BtnConfig = {
-    play: {
-        alt: 'Play',
-        src: PlayIcon,
-    },
-    pause: {
-        alt: 'Pause',
-        src: PauseIcon,
-    },
-    fullscreen: {
-        alt: 'Fullscreen',
-        src: FullScreenIcon,
-    },
-    exitfullscreen: {
-        alt: 'Exit Fullscreen',
-        src: ExitFullScreenIcon,
-    },
-    volume: {
-        alt: 'Unmute',
-        src: VolumeMutedIcon,
-    },
-    mutevolume: {
-        alt: 'Mute',
-        src: VolumeIcon,
-    },
+    play: { alt: 'Play', src: PlayIcon, },
+    playdisabled: { 'alt': "Can't Play", src: PlayIcon },
+    pause: { alt: 'Pause', src: PauseIcon, },
+    pausedisabled: {alt: "Can't Pause", src: PauseIcon},
+    fullscreen: { alt: 'Fullscreen', src: FullScreenIcon, },
+    exitfullscreen: { alt: 'Exit Fullscreen', src: ExitFullScreenIcon, },
+    volume: { alt: 'Unmute', src: VolumeMutedIcon, },
+    mutevolume: { alt: 'Mute', src: VolumeIcon, },
 }
 
 const ControlButton = (props: Props) => {

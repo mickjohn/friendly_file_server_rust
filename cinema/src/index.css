@@ -8,11 +8,19 @@ body {
 }
 
 header {
+    color: #f2f2f2;
     text-align: center;
-    border-bottom: 1px solid red;
+    border-bottom: 1px solid #f2f2f2;
+    background-color: #c03061;
 }
 
-header > h2 {
+header > a, header > a:visited {
+    display: inline-block;
+    color: #f2f2f2;
+    text-decoration: none;
+}
+
+header > a > h2 {
     margin: 0;
     padding: 10px;
 }

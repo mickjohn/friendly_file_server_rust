@@ -349,6 +349,7 @@ class VideoPlayer extends React.Component<Props, State> {
     componentWillUnmount() {
         window.clearInterval(this.statsUpdateInterval);
         window.clearInterval(this.saveCurrentTimeInterval);
+        window.clearTimeout(this.hideControlsTimeout);
     }
 
     render() {
