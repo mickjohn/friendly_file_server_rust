@@ -30,7 +30,7 @@ export default class StatsResponsesMessage extends Message {
         }`;
     }
 
-    fromJson(msg: any): StatsResponsesMessage | null {
+    static fromJson(msg: any): StatsResponsesMessage | null {
         if (msg.type !== this.type) return null;
         const responses = msg['responses'].map((r: any) => {
             return new StatsResponseMessage(

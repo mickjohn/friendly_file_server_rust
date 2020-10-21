@@ -1,4 +1,6 @@
-import Message from './messages';
+// import Message from './messages';
+
+import Message from "./messages/Message";
 
 enum WebsocketState {
     Connecting,

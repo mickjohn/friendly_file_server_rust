@@ -1,4 +1,4 @@
-import { HighlightSpanKind } from "typescript";
+import User from "../user";
 import Message from "./Message";
 
 export default class StatsResponseMessage extends Message {
@@ -37,14 +37,24 @@ export default class StatsResponseMessage extends Message {
         }`;
     }
 
-    fromJson(msg: any) : StatsResponseMessage | null {
+    static fromjson(msg: any) : StatsResponseMessage | null {
         if (msg.type !== this.type) return null;
         return new StatsResponseMessage(
             msg['name'],
             msg['time'],
             msg['id'],
-            msg['playerState'],
+            msg['playerstate'],
             msg['directr']
+        );
+    }
+
+    toUser() {
+        return new User(
+            this.id,
+            this.name,
+            this.playerState,
+            this.time,
+            this.director,
         );
     }
 }

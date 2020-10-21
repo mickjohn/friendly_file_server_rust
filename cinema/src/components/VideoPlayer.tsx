@@ -4,9 +4,9 @@ import ProgressBar from './ProgressBar';
 
 // Resources
 import './VideoPlayer.css';
-import { PlayerState } from '../messages';
 import ControlButton from './ControlButton';
 import ShowSidebar from '../icons/watch_with_friends.svg';
+import PlayerState from '../playerstate';
 
 interface Props {
     source: string;

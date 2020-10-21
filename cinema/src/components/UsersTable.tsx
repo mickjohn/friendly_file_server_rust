@@ -1,11 +1,11 @@
 import React from 'react';
-import { PlayerState } from '../messages';
 import User from '../user';
 import {toMovieTime} from '../utils';
 
 import './UsersTable.css';
 import smallPlayIcon from '../icons/small_play_icon.svg';
 import smallPauseIcon from '../icons/small_pause_icon.svg';
+import PlayerState from '../playerstate';
 
 interface Props {
     users: User[],

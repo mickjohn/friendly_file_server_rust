@@ -1,7 +1,7 @@
 import Message from "./Message";
 
 export default class PauseMessage extends Message {
-    static type = 'Play';
+    static type = 'Pause';
     type: string;
     name: string;
 
@@ -18,7 +18,7 @@ export default class PauseMessage extends Message {
         }`;
     }
 
-    fromJson(msg: any) : PauseMessage | null {
+    static fromJson(msg: any) : PauseMessage | null {
         if (msg.type !== this.type) return null;
         return new PauseMessage(msg['name']);
     }

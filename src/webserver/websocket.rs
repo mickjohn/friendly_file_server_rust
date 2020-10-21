@@ -166,6 +166,7 @@ async fn user_msg_recieved(my_id: usize, code: String, msg: warp::filters::ws::M
                 _ => {},
             };
         } else {
+            error!("Error parsing message {}", msg);
             return;
         }
 }

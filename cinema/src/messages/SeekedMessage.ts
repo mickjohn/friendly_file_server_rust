@@ -1,7 +1,7 @@
 import Message from "./Message";
 
 export default class SeekedMessage extends Message {
-    static type = 'Play';
+    static type = 'Seeked';
     type: string;
     name: string;
     time: number;
@@ -17,11 +17,11 @@ export default class SeekedMessage extends Message {
         return `{
             "type": "${this.type}",
             "name": "${this.name}",
-            "time: ${this.time}
+            "time": ${this.time}
         }`;
     }
 
-    fromJson(msg: any) : SeekedMessage | null {
+    static fromJson(msg: any) : SeekedMessage | null {
         if (msg.type !== this.type) return null;
         return new SeekedMessage(msg['name'], msg['time']);
     }

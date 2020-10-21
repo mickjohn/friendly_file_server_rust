@@ -1,4 +1,3 @@
-import { stringify } from "querystring";
 import Message from "./Message";
 
 export default class PlayMessage extends Message {
@@ -19,8 +18,8 @@ export default class PlayMessage extends Message {
         }`;
     }
 
-    fromJson(msg: any) : PlayMessage | null {
-        if (msg.type !== this.type) return null;
+    static fromJson(msg: any) : PlayMessage | null {
+        if (msg['type'] !== this.type) return null;
         return new PlayMessage(msg['name']);
     }
 }

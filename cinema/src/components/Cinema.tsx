@@ -4,13 +4,21 @@ import VideoPlayer from './VideoPlayer';
 
 // Other classes
 import Config from '../config';
-import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats, PlayerState, Seeked} from '../messages';
+// import {parseMessage, Play, Pause, Stats, Disconnected, StatsResponses, RequestStats, PlayerState, Seeked} from '../messages';
 import User, { findDirector } from '../user';
 import WebsocketWrapper from '../websocket-wrapper';
 
 import './Cinema.css';
 import SideContent from './SideContent';
 import { removeRoomFromUrl } from '../utils';
+import PlayMessage from '../messages/PlayMessage';
+import PauseMessage from '../messages/PauseMessage';
+import SeekedMessage from '../messages/SeekedMessage';
+import MessageRouter from '../messages/MessageRouter';
+import StatsResponsesMessage from '../messages/StatsResponsesMessage';
+import PlayerState from '../playerstate';
+import StatsMessage from '../messages/StatsMessage';
+import RequestStatsMessage from '../messages/RequestStatsMessage';
 
 
 interface State {
@@ -45,11 +53,18 @@ class Cinema extends React.Component<Props, State> {
 
     websocket: WebsocketWrapper|undefined;
     catchUpOnJoin: boolean;
+    messageRouter: MessageRouter;
 
     constructor(props: Props) {
         super(props);
         this.websocket = undefined;
         this.catchUpOnJoin = true;
+
+        this.messageRouter = new MessageRouter();
+        this.messageRouter.onPlayMessage((p: PauseMessage) => this.onPlayMessage(p));
+        this.messageRouter.onPauseMessage((p: PlayMessage) => this.onPauseMessage(p));
+        this.messageRouter.onStatsResponsesMessage((p: StatsResponsesMessage) => this.onStatsResponsesMessage(p));
+        this.messageRouter.onSeekedMessage((m: SeekedMessage) => this.onSeekedMessage(m));
 
 
         this.state = {
@@ -76,61 +91,45 @@ class Cinema extends React.Component<Props, State> {
         );
     }
 
+    onPlayMessage(msg: PlayMessage) {
+        this.setState({isPlaying: true});
+    }
+
+    onPauseMessage(msg: PauseMessage) {
+        this.setState({isPlaying: false});
+    }
+
+    onStatsResponsesMessage(msg: StatsResponsesMessage) {
+        const users = msg.responses.map((r) => { return r.toUser() });
+        if (this.catchUpOnJoin) {
+            this.catchUpWithDirector(users);
+        }
+
+        this.setState({
+            connectedUsers: users,
+            directorName: msg.director ?? undefined
+        });
+    }
+
+    onSeekedMessage(msg: SeekedMessage) {
+        console.debug("On Seeked.");
+        // Don't forget that an update to adjustTime just informs the
+        // VideoPlayer component to set it's time to the props time
+        const adjustTime = this.state.adjustTime;
+
+        // Only seek if not a director
+        if (!this.props.isDirector) {
+            this.setState({
+                adjustTime: adjustTime + 1,
+                currentTime: msg.time,
+            });
+        }
+    }
+
     // The websocket message handler.
     wsMessageReceived(e: MessageEvent) {
-        const message = parseMessage(JSON.parse(e.data));
-        switch(message.type) {
-            case Play.type: {
-                this.setState({isPlaying: true});
-                break;
-            }
-            case Pause.type: {
-                this.setState({isPlaying: false});
-                break;
-            }
-            case StatsResponses.type: {
-                const statsResonses = message as StatsResponses;
-                const users = statsResonses.responses.map((r) => { return r.toUser()});
-                if (this.catchUpOnJoin) {
-                    this.catchUpWithDirector(users);
-                }
-
-                this.setState({
-                    connectedUsers: users,
-                    directorName: statsResonses.director ?? undefined
-                });
-                break;
-            }
-            case Disconnected.type: {
-                const disconnected = message as Disconnected;
-                const users = [...this.state.connectedUsers];
-                // Find user to delete by it's ID
-                let indexToDelete = undefined;
-                users.forEach((user, index) => {
-                    if (user.id === disconnected.id)  indexToDelete = index;
-                });
-                if (indexToDelete) delete users[indexToDelete];
-                this.setState({connectedUsers: users});
-                break;
-            }
-            case Seeked.type: {
-                console.log("Received Seeked message");
-                const seeked = message as Seeked;
-                // Only seek if not a director
-                const adjustTime = this.state.adjustTime;
-                if (!this.props.isDirector) {
-                    this.setState({
-                        adjustTime: adjustTime+1,
-                        currentTime: seeked.time,
-                    });
-                }
-                break;
-            }
-            default: {
-                console.log(`No action taken for message ${e.data}`);
-                break; 
-            }
-        }
+        const msg = e.data;
+        this.messageRouter.routeMessage(msg);
     };
 
     catchUpWithDirector(users: User[]) {
@@ -176,21 +175,17 @@ class Cinema extends React.Component<Props, State> {
         // In a party and the director
         if (this.state.inParty && this.props.isDirector) {
             onPlay = () => {
-                console.log("Playing...");
-                const msg: Play = new Play(this.state.name);
-                this.websocket?.send(msg);
+                this.websocket?.send(new PlayMessage(this.state.name));
             };
 
             onPause = () => {
-                console.log("Pausing...")
-                const msg: Pause = new Pause(this.state.name);
-                this.websocket?.send(msg);
+                this.websocket?.send(new PauseMessage(this.state.name));
             };
 
             onTimeInterval = (time: number, playerState: PlayerState) => {
                 // On the interval, send this userse stats, and request an update on the users.
-                this.websocket?.send(new Stats(this.state.name, time, playerState, this.props.isDirector));
-                this.websocket?.send(new RequestStats());
+                this.websocket?.send(new StatsMessage(this.state.name, time, playerState, this.props.isDirector));
+                this.websocket?.send(new RequestStatsMessage());
             };
 
             onSeek = (time: number) => {
@@ -199,16 +194,16 @@ class Cinema extends React.Component<Props, State> {
                     adjustTime: this.state.adjustTime + 1,
                 });
                 // Pause on Seek. This is to allow the director to wait for people to catch up.
-                this.websocket?.send(new Pause(this.state.name));
-                this.websocket?.send(new Seeked(this.state.name, time));
+                this.websocket?.send(new PauseMessage(this.state.name));
+                this.websocket?.send(new SeekedMessage(this.state.name, time));
             };
 
         // Else, when in a party but as a guest
         } else if (this.state.inParty) {
             onTimeInterval = (time: number, playerState: PlayerState) => {
                 // On the interval, send this userse stats, and request an update on the users.
-                this.websocket?.send(new Stats(this.state.name, time, playerState, this.props.isDirector));
-                this.websocket?.send(new RequestStats());
+                this.websocket?.send(new StatsMessage(this.state.name, time, playerState, this.props.isDirector));
+                this.websocket?.send(new RequestStatsMessage());
             };
 
             // Guests can't play, pause or seek, so make them no-ops

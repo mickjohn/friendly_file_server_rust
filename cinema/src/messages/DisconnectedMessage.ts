@@ -1,7 +1,7 @@
 import Message from "./Message";
 
 export default class DisconnectedMessage extends Message {
-    static type = 'Play';
+    static type = 'Disconnected';
     type: string;
     id: number;
 
@@ -18,7 +18,7 @@ export default class DisconnectedMessage extends Message {
         }`;
     }
 
-    fromJson(msg: any) : DisconnectedMessage | null {
+    static fromJson(msg: any) : DisconnectedMessage | null {
         if (msg.type !== this.type) return null;
         return new DisconnectedMessage(msg['id']);
     }
