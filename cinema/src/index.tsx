@@ -180,7 +180,7 @@ class App extends React.Component<Props, State> {
         return (
             <Fragment>
                 <header>
-                    <a href="/browse"><h2>Mickjohn.com</h2></a>
+                    <a href="/browse/"><h2>Mickjohn.com</h2></a>
                 </header>
                 {this.getVideoElem()}
                 {this.getSpinner()}

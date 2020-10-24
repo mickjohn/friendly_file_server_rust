@@ -10,8 +10,10 @@
 </head>
 
 <body>
-   <div class="content">
-    <h1>Friendly File Server</h1>
+  <header>
+    <a href="/browse/"><h2>Mickjohn.com</h2></a>
+  </header>
+  <div class="content">
     <div class="path">
       <span id="crumbtrail">Index of <a href="/browse/">root /</a></span>
 
@@ -62,9 +64,9 @@
         <td> - </td>
         {{ else }}
         <td> {{ child.size }} </td>
-        {{/if }}        
-        
-      </tr>            
+        {{/if }}
+
+      </tr>
       {{/each}}
     </table>
 
