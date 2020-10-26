@@ -46,8 +46,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let room_cleaner = models::new_room_cleaner();
     let urls = models::Urls::default();
 
-    info!("Loading catalogue from {}", CATALOGUE_PATH);
-    let catalogue = models::new_catalogue(Path::new(CATALOGUE_PATH))?;
+    // info!("Loading catalogue from {}", CATALOGUE_PATH);
+    // let catalogue = models::new_catalogue(Path::new(CATALOGUE_PATH))?;
 
 
     // Filters
@@ -101,7 +101,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
-                   .or(get_catalogue.recover(filters::recover_auth))
+                //    .or(get_catalogue.recover(filters::recover_auth))
                    .or(websocket)
                    .or(redirect);
 
