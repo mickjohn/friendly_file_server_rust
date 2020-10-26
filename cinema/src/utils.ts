@@ -16,4 +16,15 @@ export function removeRoomFromUrl() {
     window.history.replaceState('', '', newUrl);
 }
 
+export function UrlExists(url: string, callback: (exists: boolean) => void) {
+    var http = new XMLHttpRequest();
+    http.open('GET', url);
+    http.onreadystatechange = function() {
+        if (this.readyState === this.DONE) {
+            callback(this.status === 200);
+        }
+    };
+    http.send();
+}
+
 export default toMovieTime;

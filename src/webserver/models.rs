@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::{mpsc, Mutex};
@@ -10,6 +11,7 @@ use futures::future::{AbortHandle};
 use crate::fs_utils::ServePoint;
 use crate::hb_helpers;
 use crate::webserver::messages::{PlayerState, StatsStruct};
+use crate::movies::{self, Catalogue};
 
 
 #[derive(Deserialize)]
@@ -35,6 +37,7 @@ pub type Sender = mpsc::UnboundedSender<Result<Message, warp::Error>>;
 pub type Rooms = Arc<Mutex<HashMap<String, Room>>>;
 pub type RoomCleaner = Arc<Mutex<HashMap<String, AbortHandle>>>;
 pub type Urls = Arc<Mutex<HashMap<String, String>>>;
+pub type CatalogueArc = Arc<Mutex<Catalogue>>;
 
 // For websockets
 pub struct Room {
@@ -125,4 +128,9 @@ pub fn new_handlebars_arc<'a>() -> Hba<'a> {
 
 pub fn new_room_cleaner() -> RoomCleaner {
     Arc::new(Mutex::new(HashMap::new()))
+}
+
+pub fn new_catalogue(path: &Path) -> Result<CatalogueArc, String> {
+    let c = movies::load_catalogue_from_file(path)?;
+    Ok(Arc::new(Mutex::new(c)))
 }

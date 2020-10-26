@@ -8,6 +8,8 @@ import FullScreenIcon from '../icons/fullscreen.svg';
 import ExitFullScreenIcon from '../icons/exit_fullscreen.svg';
 import VolumeMutedIcon from '../icons/volume_muted.svg';
 import VolumeIcon from '../icons/volume_icon.svg';
+import ShowSubs from '../icons/show_subs.svg';
+import HideSubs from '../icons/hide_subs.svg';
 
 
 interface Props {
@@ -18,7 +20,9 @@ interface Props {
         | "fullscreen"
         | "exitfullscreen"
         | "volume"
-        | "mutevolume";
+        | "mutevolume"
+        | "showsubs"
+        | "hidesubs";
     onClick: () => void;
 }
 
@@ -36,6 +40,8 @@ interface BtnConfig {
     exitfullscreen: BtnProps,
     volume: BtnProps,
     mutevolume: BtnProps,
+    showsubs: BtnProps,
+    hidesubs: BtnProps,
 }
 
 const btnConfig: BtnConfig = {
@@ -47,6 +53,8 @@ const btnConfig: BtnConfig = {
     exitfullscreen: { alt: 'Exit Fullscreen', src: ExitFullScreenIcon, },
     volume: { alt: 'Unmute', src: VolumeMutedIcon, },
     mutevolume: { alt: 'Mute', src: VolumeIcon, },
+    showsubs: { alt: 'Show Captions', src: ShowSubs },
+    hidesubs: { alt: 'Hide Captions', src: HideSubs },
 }
 
 const ControlButton = (props: Props) => {

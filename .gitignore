@@ -1,6 +1,8 @@
 /target
 /cinema/node_modules/
 /cinema/build/
+/catalogue/node_modules/
+/catalogue/build/
 /static/cinema_build/
 /static/cinema/
 TODO

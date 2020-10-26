@@ -7,6 +7,8 @@ import './VideoPlayer.css';
 import ControlButton from './ControlButton';
 import ShowSidebar from '../icons/watch_with_friends.svg';
 import PlayerState from '../playerstate';
+import {UrlExists} from '../utils';
+import { threadId } from 'worker_threads';
 
 interface Props {
     source: string;
@@ -39,6 +41,8 @@ interface State {
     fullscreen: boolean;
     duration: number;
     showControls: boolean;
+    haveSubtitles: boolean;
+    showSubtitles: boolean;
 }
 
 function toMovieTime(totalSeconds: number): string {
@@ -77,6 +81,8 @@ class VideoPlayer extends React.Component<Props, State> {
             fullscreen: false,
             duration: 0,
             showControls: true,
+            haveSubtitles: false,
+            showSubtitles: false,
         };
     }
 
@@ -155,12 +161,41 @@ class VideoPlayer extends React.Component<Props, State> {
         }
     }
 
+    hideSubtitles() {
+        this.setState({ showSubtitles: false });
+        if (this.videoRef.current) {
+            for (var i = 0; i < this.videoRef.current.textTracks.length; i++) {
+                this.videoRef.current.textTracks[i].mode = 'hidden';
+            }
+        }
+    }
+
+    showSubtitles() {
+        this.setState({ showSubtitles: true });
+        if (this.videoRef.current) {
+            for (var i = 0; i < this.videoRef.current.textTracks.length; i++) {
+                this.videoRef.current.textTracks[i].mode = 'showing';
+            }
+        }
+    }
+
     getPlayPauseButton() {
         if (this.state.playing) {
             return <ControlButton type='pause' onClick={() => this.onPauseClicked() } />;
         } else {
             return <ControlButton type='play' onClick={() => this.onPlayClicked() } />;
         }
+    }
+
+    getSubtitlesButton() {
+        if (this.state.haveSubtitles) {
+            if (this.state.showSubtitles) {
+                return <ControlButton type='hidesubs' onClick={() => this.hideSubtitles()} />;
+            } else {
+                return <ControlButton type='showsubs' onClick={() => this.showSubtitles()} />;
+            }
+        }
+        return null;
     }
 
     getVolumeButton() {
@@ -202,6 +237,7 @@ class VideoPlayer extends React.Component<Props, State> {
                         progressBarClass="volume-slider"
                         onClick={(p) => this.setVolume(p)}
                     />
+                    {this.getSubtitlesButton()}
                     <span>{toMovieTime(this.props.currentTime)} / {toMovieTime(this.state.duration)}</span>
                     {this.getFullscreenButton()}
                 </div>
@@ -311,6 +347,17 @@ class VideoPlayer extends React.Component<Props, State> {
         if (figElem !== null) {
             figElem.addEventListener('fullscreenchange', () => this.setState({ fullscreen: document.fullscreenElement !== null }));
         }
+
+        /* Check if the subtitles exist */
+        const subtitlesUrl = this.props.source.replace(/\.mp4$/, '.vtt');
+        UrlExists(subtitlesUrl, (exists: boolean) => {
+            if (exists) {
+                this.setState({ haveSubtitles: true })
+            } else {
+                console.error("Subtitles file not found");
+            }
+            this.hideSubtitles();
+        });
     }
 
     // Check if the props have updated. If the playing prop has changed then act accordingly
@@ -364,6 +411,11 @@ class VideoPlayer extends React.Component<Props, State> {
             if (!this.state.fullscreen && this.state.playing) this.setState({showControls: false});
         }
 
+        let track = null;
+        if (this.state.haveSubtitles) {
+            track = <track label="English" kind="subtitles" srcLang="en" src={this.props.source.replace(/\.mp4$/, '.vtt')} default />
+        } 
+
         return (
             <div className={`video-container ${fullscreen_class}`}>
                 <figure ref={this.figureRef} >
@@ -377,6 +429,7 @@ class VideoPlayer extends React.Component<Props, State> {
                             preload="metadata"
                             onClick={() => this.togglePlayback()} >
                             <source src={this.props.source} type="video/mp4" />
+                            {track}
                             Your browser does not support HTML video.
                         </video>
                         {controls}

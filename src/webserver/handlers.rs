@@ -8,7 +8,7 @@ use base64::decode;
 use tokio::task;
 
 use super::websocket::delete_from_rooms;
-use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery, RoomCodeQuery, RoomCleaner};
+use super::models::{Hba, Sp, Rooms, Room, Urls, UrlQuery, RoomCodeQuery, RoomCleaner, CatalogueArc};
 use super::filters::Authenticated;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -137,4 +137,12 @@ pub async fn wwf_lookup_redirect(
     } else {
         Err(warp::reject())
     }
+}
+
+pub async fn get_catalogue(
+    _: Authenticated,
+    c: CatalogueArc,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let catalogue = c.lock().await;
+    Ok(warp::reply::json(&(*catalogue)))
 }

@@ -1,7 +1,7 @@
 use crate::verify;
 use super::handlers;
 use super::rejections;
-use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery, RoomCleaner};
+use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery, RoomCleaner, CatalogueArc};
 
 use warp::Filter;
 use warp::http::StatusCode;
@@ -80,6 +80,16 @@ pub fn wwf_redirect(
         .and_then(handlers::wwf_lookup_redirect)
 }
 
+pub fn get_catalogue(
+    users: UserMap,
+    catalogue: CatalogueArc,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path("catalogue")
+        .and(auth(users))
+        .and(with_catalogue(catalogue))
+        .and_then(handlers::get_catalogue)
+}
+
 fn with_sp(sp: Sp) -> impl Filter<Extract = (Sp,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || sp.clone())
 }
@@ -102,6 +112,10 @@ pub fn with_room_cleaner(cleaner: RoomCleaner) -> impl Filter<Extract = (RoomCle
 
 fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || urls.clone())
+}
+
+fn with_catalogue(catalogue: CatalogueArc) -> impl Filter<Extract = (CatalogueArc,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || catalogue.clone())
 }
 
 

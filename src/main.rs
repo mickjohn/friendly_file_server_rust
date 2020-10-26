@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::error::Error;
 use std::env;
 use std::path::PathBuf;
@@ -17,9 +18,11 @@ mod fs_utils;
 mod hb_helpers;
 mod args;
 mod webserver;
+mod movies;
 
 use crate::webserver::{models, filters, websocket};
 
+static CATALOGUE_PATH: &'static str = "data/catalogue.json";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -27,6 +30,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         env::set_var("RUST_LOG", "friendly_file_server_rust=debug");
     }
     pretty_env_logger::init();
+    info!("Initialising");
 
     let config = args::parse_config_from_args()?;
     let root_path = PathBuf::from(&config.sharedir);
@@ -41,6 +45,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let rooms = models::Rooms::default();
     let room_cleaner = models::new_room_cleaner();
     let urls = models::Urls::default();
+
+    info!("Loading catalogue from {}", CATALOGUE_PATH);
+    let catalogue = models::new_catalogue(Path::new(CATALOGUE_PATH))?;
 
 
     // Filters
@@ -67,7 +74,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     .map(|_: filters::Authenticated, file| file )
                     .with(warp::reply::with::headers(headers));
 
-    // The websocket enpoint used to join the rooms
+    // The websocket endpoint used to join the rooms
     let websocket = warp::path("rooms")
                     .and(warp::path::param::<String>())
                     .and(warp::path::end())
@@ -84,6 +91,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Redirect the shortened URLS
     let wwf_redirect = filters::wwf_redirect(users.clone(), urls);
 
+    // Get the movie catalogue
+    let get_catalogue = filters::get_catalogue(users.clone(), catalogue);
+
     let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
                    .or(create_room.recover(filters::recover_auth))
@@ -91,11 +101,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
+                   .or(get_catalogue.recover(filters::recover_auth))
                    .or(websocket)
                    .or(redirect);
 
     // Start up the server...
-    info!("Serving routes...");
+
+    info!("Starting server on {}.{}.{}.{}:{}",
+            config.ipaddr[0],
+            config.ipaddr[1],
+            config.ipaddr[2],
+            config.ipaddr[3],
+            config.port);
     warp::serve(routes).run((config.ipaddr, config.port)).await;
     Ok(())
 }
