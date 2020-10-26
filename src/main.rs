@@ -92,7 +92,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let wwf_redirect = filters::wwf_redirect(users.clone(), urls);
 
     // Get the movie catalogue
-    let get_catalogue = filters::get_catalogue(users.clone(), catalogue);
+    // let get_catalogue = filters::get_catalogue(users.clone(), catalogue);
 
     let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
