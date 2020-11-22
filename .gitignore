@@ -3,6 +3,8 @@
 /cinema/build/
 /catalogue/node_modules/
 /catalogue/build/
+/admin/node_modules/
+/admin/build/
 /static/cinema_build/
 /static/cinema/
 TODO

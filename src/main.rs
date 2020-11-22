@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::error::Error;
 use std::env;
 use std::path::PathBuf;
@@ -7,6 +6,8 @@ use warp::http::header::{HeaderMap, HeaderValue};
 use argon2::{self, Config};
 use rand::Rng;
 use warp::http::Uri;
+use tokio_postgres;
+use tokio_postgres::{NoTls};
 
 #[macro_use]
 extern crate lazy_static;
@@ -18,11 +19,10 @@ mod fs_utils;
 mod hb_helpers;
 mod args;
 mod webserver;
-mod movies;
+mod db;
+mod db_models;
 
 use crate::webserver::{models, filters, websocket};
-
-static CATALOGUE_PATH: &'static str = "data/catalogue.json";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -32,11 +32,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::init();
     info!("Initialising");
 
-    let config = args::parse_config_from_args()?;
+    let config = args::load_config()?;
     let root_path = PathBuf::from(&config.sharedir);
 
     let mut headers = HeaderMap::new();
     headers.insert("Content-Disposition", HeaderValue::from_static("attachement"));
+
+    let db_conn_str = format!("host={} user=postgres password=mysecretpassword dbname=catalogue", &config.db_url);
+    let (client, connection) = tokio_postgres::connect(&db_conn_str, NoTls).await?;
+
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            eprintln!("connection error: {}", e);
+        }
+    }); 
 
     // Data models
     let sp = models::new_serve_point(root_path.clone());
@@ -45,10 +54,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let rooms = models::Rooms::default();
     let room_cleaner = models::new_room_cleaner();
     let urls = models::Urls::default();
-
-    // info!("Loading catalogue from {}", CATALOGUE_PATH);
-    // let catalogue = models::new_catalogue(Path::new(CATALOGUE_PATH))?;
-
+    let db_client = models::new_db_client(client);
 
     // Filters
     // The 'cinema' page, i.e. where users can 
@@ -85,14 +91,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms, cleaner))
                     });
 
+    let get_catalogue = filters::get_catalogue(users.clone(), db_client.clone());
+                        
+
     // Redirect index to browse endpoint
     let redirect = warp::path::end().map(|| warp::redirect(Uri::from_static("/browse/")));
 
     // Redirect the shortened URLS
     let wwf_redirect = filters::wwf_redirect(users.clone(), urls);
 
-    // Get the movie catalogue
-    // let get_catalogue = filters::get_catalogue(users.clone(), catalogue);
+    let api_routes = warp::path("api").and(get_catalogue);
 
     let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
@@ -101,7 +109,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
-                //    .or(get_catalogue.recover(filters::recover_auth))
+                   .or(api_routes.recover(filters::recover_auth))
                    .or(websocket)
                    .or(redirect);
 

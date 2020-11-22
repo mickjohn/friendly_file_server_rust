@@ -1,12 +1,14 @@
 use crate::verify;
 use super::handlers;
 use super::rejections;
-use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery, RoomCleaner, CatalogueArc};
+use super::models::{Sp, Hba, UserMap, Rooms, Urls, UrlQuery, RoomCodeQuery, RoomCleaner, DbClientArc};
 
 use warp::Filter;
 use warp::http::StatusCode;
 use base64;
 use std::str;
+
+const ADMIN_NAME: &'static str = "admin";
 
 #[derive(Clone)]
 pub struct Authenticated;
@@ -82,11 +84,13 @@ pub fn wwf_redirect(
 
 pub fn get_catalogue(
     users: UserMap,
-    catalogue: CatalogueArc,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path("catalogue")
+    client: DbClientArc,
+) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+    warp::get()
+        .and(warp::path("catalogue"))
+        .and(warp::path::end())
         .and(auth(users))
-        .and(with_catalogue(catalogue))
+        .and(with_db_client(client))
         .and_then(handlers::get_catalogue)
 }
 
@@ -114,8 +118,8 @@ fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert:
     warp::any().map(move || urls.clone())
 }
 
-fn with_catalogue(catalogue: CatalogueArc) -> impl Filter<Extract = (CatalogueArc,), Error = std::convert::Infallible> + Clone {
-    warp::any().map(move || catalogue.clone())
+fn with_db_client(client: DbClientArc) -> impl Filter<Extract = (DbClientArc,), Error = std::convert::Infallible> + Clone {
+    warp::any().map(move || client.clone())
 }
 
 
@@ -124,6 +128,25 @@ pub fn auth(users: UserMap) -> impl Filter<Extract = (Authenticated,), Error = w
         .and(with_users_map(users))
         .and_then(|header: String, users: UserMap| async move {
             let (u,p) = parse_auth_header(&header);
+            let users = users.lock().await;
+            if let Some(hashed_password) = users.get(&u) {
+                if verify(hashed_password, p.as_bytes()) {
+                    return Ok(Authenticated);
+                }
+            }
+            Err(warp::reject::custom(rejections::InvalidCredentials))
+        })
+}
+
+pub fn admin(users: UserMap) -> impl Filter<Extract = (Authenticated,), Error = warp::Rejection> + Clone {
+    warp::header::<String>("Authorization")
+        .and(with_users_map(users))
+        .and_then(|header: String, users: UserMap| async move {
+            let (u,p) = parse_auth_header(&header);
+            if u != ADMIN_NAME {
+                return Err(warp::reject::custom(rejections::InvalidCredentials));
+            }
+
             let users = users.lock().await;
             if let Some(hashed_password) = users.get(&u) {
                 if verify(hashed_password, p.as_bytes()) {

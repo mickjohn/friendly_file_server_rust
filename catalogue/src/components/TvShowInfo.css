@@ -1,0 +1,30 @@
+.TvShowInfo a, a:visited {
+    color: #555;
+    text-decoration: none;
+}
+
+.TvShowInfo a:hover {
+    color: rgb(77, 154, 216);
+    text-decoration: underline;
+}
+
+.TvShowInfo table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.TvShowInfo td, th {
+    border-bottom: 1px solid #dddddd;
+    padding: 3px;
+}
+
+.TvShowInfo tr:hover {
+    background-color: #dddddd;
+}
+
+.TvShowInfo select {
+    font-size: 20px;
+    color: #505050;
+    border: 2px solid #e0e0e0;
+}

@@ -1,0 +1,36 @@
+body {
+    color: #505050;
+    font-family: "Helvetica", "Arial", sans-serif;
+    background-color: #f9f9f9;
+    padding: 0;
+    margin: 0;
+}
+
+header {
+    color: #f2f2f2;
+    text-align: center;
+    border-bottom: 1px solid #f2f2f2;
+    background-color: #c03061;
+}
+
+header > a, header > a:visited {
+    display: inline-block;
+    color: #f2f2f2;
+    text-decoration: none;
+}
+
+header > a > h2 {
+    margin: 0;
+    padding: 10px;
+}
+
+.App {
+    max-width: 80%;
+    margin: 15px auto 0 auto;
+    background-color: white;
+    border: 2px solid #e0e0e0;
+}
+
+.App h1 {
+    text-align: center;
+}

@@ -1,0 +1,30 @@
+.Card {
+    display: inline-block;
+    min-width: 350px;
+    max-width: 350px;
+    height: 180px;
+    border-radius: 4px;
+    margin: 15px;
+    padding: 5px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 #d4d4d5,0 0 0 1px #d4d4d5;
+    background-color: white;
+    cursor: pointer;
+}
+
+.CardHeader {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.CardYear {
+    color: #7e7e7e;
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.CardDescription {
+    font-size: 16px;
+    overflow: hidden;
+}

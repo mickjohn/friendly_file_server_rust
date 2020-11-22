@@ -1,13 +1,53 @@
 use clap::{Arg, App, ArgMatches};
+use serde::Deserialize;
 use std::path::Path;
 use std::collections::HashMap;
 use std::fs;
+
+/*
+Config is loaded from JSON file first, those values are used as defaults for
+the rest of the command line arguments.
+
+i.e. use config file for defaults and overwrite using CLI args.
+*/
 
 pub struct Config {
     pub ipaddr: [u8; 4],
     pub port: u16,
     pub sharedir: String,
     pub users: HashMap<String, String>,
+    pub db_url: String,
+}
+
+#[derive(Deserialize)]
+struct JsonConfig {
+    pub ipaddr: Option<String>,
+    pub port: Option<u16>,
+    pub sharedir: Option<String>,
+    pub users_file: Option<String>,
+    pub db_url: Option<String>,
+}
+
+impl Default for JsonConfig {
+    fn default() -> Self {
+        JsonConfig{
+            ipaddr: None,
+            port: None,
+            sharedir: None,
+            users_file: None,
+            db_url: None,
+        }
+    }
+}
+
+struct CliConfig {
+    // pub ipaddr: Option<[u8; 4]>,
+    pub ipaddr: Option<String>,
+    pub port: Option<u16>,
+    pub sharedir: Option<String>,
+    pub users_file: Option<String>,
+    pub config_file: Option<String>,
+    pub db_url: Option<String>,
 }
 
 fn parse_args<'a>() -> ArgMatches<'a> {
@@ -18,56 +58,97 @@ fn parse_args<'a>() -> ArgMatches<'a> {
          .long("ipaddr")
          .help("IP address to bind to")
          .default_value("127.0.0.1")
+         .required(false)
          .takes_value(true))
     .arg(Arg::with_name("port")
          .long("port")
          .help("The HTTP webserver port to listen to")
          .default_value("5000")
+         .required(false)
          .takes_value(true))
     .arg(Arg::with_name("sharedir")
          .long("sharedir")
          .help("The directory to server files from")
+         .required(false)
          .takes_value(true))
     .arg(Arg::with_name("credsfile")
          .long("credsfile")
          .help("The file containing the credentials")
+         .required(false)
          .takes_value(true))
+    .arg(Arg::with_name("config")
+        .long("config")
+        .help("path to config file")
+        .required(false)
+        .takes_value(true))
     .get_matches()
 }
 
-pub fn parse_config_from_args() -> Result<Config, String> {
+fn parse_config_from_json_file(p: &Path) -> Result<JsonConfig, String> {
+    let content = fs::read_to_string(p).map_err(|e| format!("{:?}", e))?;
+    let json_config: JsonConfig = serde_json::from_str(&content).map_err(|e| format!("{:?}", e))?;
+    Ok(json_config)
+}
+
+fn parse_config_from_args() -> Result<CliConfig, String> {
     let matches = parse_args();
 
     /* Safe to use unwrap because they have a default value */
     let ipaddr_str = matches.value_of("ipaddr").unwrap().to_owned();
-    let ipaddr = validate_ip_addr(&ipaddr_str)?;
 
-    let port: u16 = matches
-        .value_of("port")
-        .unwrap()
-        .parse()
-        .map_err(|e| format!("{}", e))?;
+    let db_url = matches.value_of("ipaddr").unwrap().to_owned();
 
-    let credsfile = matches
-        .value_of("credsfile")
-        .ok_or(String::from("Please specify credsfile"))?
-        .to_owned();
+    let mut port = None;
+    if let Some(p) = matches.value_of("port").map(|p| p.parse::<u16>()) {
+        port = Some(p.map_err(|e| format!("{}", e))?);
+    }
 
-    let credsfile_path = Path::new(&credsfile);
-    let contents = fs::read_to_string(&credsfile_path).map_err(|e| format!("{}", e))?;
-    let users = load_users_from_str(&contents)?;
-    
+    let credsfile = matches.value_of("credsfile").map(|c| c.to_owned());
+
     let sharedir = matches
         .value_of("sharedir")
-        .ok_or(String::from("Plase specift sharedir argument"))?
+        .ok_or(String::from("Plase specify sharedir argument"))?
         .to_owned();
 
-    Ok(Config {
-        ipaddr,
-        port,
-        sharedir,
-        users,
+    let config_file = matches
+        .value_of("config")
+        .ok_or(String::from("Plase specify config file argument"))?
+        .to_owned();
+
+    Ok(CliConfig {
+        ipaddr: Some(ipaddr_str),
+        port: port,
+        sharedir: Some(sharedir),
+        users_file: credsfile,
+        config_file: Some(config_file),
+        db_url: Some(db_url),
     })
+}
+
+pub fn load_config() -> Result<Config, String> {
+    let cli_conf = parse_config_from_args()?;
+    let mut json_config = JsonConfig::default();
+
+    // Load the config file if it has been specified
+    if let Some(config_file) = &cli_conf.config_file {
+        let p = Path::new(config_file);
+        debug!("Loading config from {}", config_file);
+        json_config = parse_config_from_json_file(&p)?;
+    }
+
+    // Merge the values from the json conf and CLI arg
+    let ipaddr_str = cli_conf.ipaddr.or(json_config.ipaddr).ok_or("Please speicfy IP address.")?;
+    let db_url = cli_conf.db_url.or(json_config.db_url).ok_or("Please specify DB url")?;
+    let port = cli_conf.port.or(json_config.port).ok_or("Please specify port.")?;
+    let sharedir = cli_conf.sharedir.or(json_config.sharedir).ok_or("Please specify Share Dir.")?;
+    let users_file = cli_conf.users_file.or(json_config.users_file).ok_or("Please specpfy Users File.")?;
+
+    // Do some further processing on some of the args
+    let users_file_contents = fs::read_to_string(&users_file).map_err(|e| format!("{}", e))?;
+    let users = load_users_from_str(&users_file_contents)?;
+    let ipaddr = validate_ip_addr(&ipaddr_str)?;
+
+    Ok(Config { ipaddr, port, sharedir, users, db_url, })
 }
 
 fn validate_ip_addr(ipaddr: &str) -> Result<[u8; 4], String> {
