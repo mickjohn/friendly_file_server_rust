@@ -38,14 +38,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut headers = HeaderMap::new();
     headers.insert("Content-Disposition", HeaderValue::from_static("attachement"));
 
-    let db_conn_str = format!("host={} user=postgres password=mysecretpassword dbname=catalogue", &config.db_url);
-    let (client, connection) = tokio_postgres::connect(&db_conn_str, NoTls).await?;
+    // TODO finish DB work
+    // let db_conn_str = format!("host={} user=postgres password=mysecretpassword dbname=catalogue", &config.db_url);
+    // let (client, connection) = tokio_postgres::connect(&db_conn_str, NoTls).await?;
 
-    tokio::spawn(async move {
-        if let Err(e) = connection.await {
-            eprintln!("connection error: {}", e);
-        }
-    }); 
+    // tokio::spawn(async move {
+    //     if let Err(e) = connection.await {
+    //         eprintln!("connection error: {}", e);
+    //     }
+    // }); 
 
     // Data models
     let sp = models::new_serve_point(root_path.clone());
@@ -54,7 +55,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let rooms = models::Rooms::default();
     let room_cleaner = models::new_room_cleaner();
     let urls = models::Urls::default();
-    let db_client = models::new_db_client(client);
+
+    // TODO finish DB work
+    // let db_client = models::new_db_client(client);
 
     // Filters
     // The 'cinema' page, i.e. where users can 
@@ -91,7 +94,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         ws.on_upgrade(move |socket| websocket::user_connected(socket, code, rooms, cleaner))
                     });
 
-    let get_catalogue = filters::get_catalogue(users.clone(), db_client.clone());
+    // TODO finish DB work
+    // let get_catalogue = filters::get_catalogue(users.clone(), db_client.clone());
                         
 
     // Redirect index to browse endpoint
@@ -100,7 +104,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Redirect the shortened URLS
     let wwf_redirect = filters::wwf_redirect(users.clone(), urls);
 
-    let api_routes = warp::path("api").and(get_catalogue);
+    // TODO finish DB work
+    // let api_routes = warp::path("api").and(get_catalogue);
 
     let routes = listing.recover(filters::recover_auth)
                    .or(cinema.recover(filters::recover_auth))
@@ -109,7 +114,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(files.recover(filters::recover_auth))
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
-                   .or(api_routes.recover(filters::recover_auth))
+                //    .or(api_routes.recover(filters::recover_auth))
                    .or(websocket)
                    .or(redirect);
 
