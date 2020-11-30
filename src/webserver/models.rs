@@ -11,8 +11,26 @@ use futures::future::{AbortHandle};
 use crate::fs_utils::ServePoint;
 use crate::hb_helpers;
 use crate::webserver::messages::{PlayerState, StatsStruct};
-// use crate::movies::{self, Catalogue};
 
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+pub enum UserRole {
+    ReadOnly,
+    Uploader,
+    Admin,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct AuthenticatedUser {
+    pub username: String,
+    pub role: UserRole,
+    pub password: String,
+}
+
+impl AuthenticatedUser {
+    pub fn new(username: String, password: String, role: UserRole) -> Self {
+        AuthenticatedUser { username, role, password }
+    }
+}
 
 #[derive(Deserialize)]
 pub struct UrlQuery {
@@ -25,7 +43,7 @@ pub struct RoomCodeQuery {
 }
 
 pub type Sp = Arc<Mutex<ServePoint>>;
-pub type UserMap = Arc<Mutex<HashMap<String, String>>>;
+pub type UserMap = Arc<Mutex<HashMap<String, AuthenticatedUser>>>;
 
 #[derive(Clone)]
 pub struct Hba<'a> {
@@ -107,7 +125,7 @@ pub fn new_serve_point(path: PathBuf) -> Sp {
     Arc::new(Mutex::new(ServePoint::new(path)))
 }
 
-pub fn new_users(users: HashMap<String, String>) -> UserMap {
+pub fn new_users(users: HashMap<String, AuthenticatedUser>) -> UserMap {
     Arc::new(Mutex::new(users))
 }
 
@@ -137,4 +155,24 @@ pub fn new_room_cleaner() -> RoomCleaner {
 
 pub fn new_db_client(client: Client) -> DbClientArc {
     Arc::new(Mutex::new(client))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_auth_roles_ordering() {
+        assert!(UserRole::Admin == UserRole::Admin);
+        assert!(UserRole::Admin > UserRole::Uploader);
+        assert!(UserRole::Admin > UserRole::ReadOnly);
+
+        assert!(UserRole::Uploader < UserRole::Admin);
+        assert!(UserRole::Uploader == UserRole::Uploader);
+        assert!(UserRole::Uploader > UserRole::ReadOnly);
+
+        assert!(UserRole::ReadOnly < UserRole::Admin);
+        assert!(UserRole::ReadOnly < UserRole::Uploader);
+        assert!(UserRole::ReadOnly == UserRole::ReadOnly);
+    }
 }

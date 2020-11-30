@@ -11,3 +11,7 @@ impl warp::reject::Reject for NotADirectory {}
 #[derive(Debug)]
 pub struct NotAFile;
 impl warp::reject::Reject for NotAFile {}
+
+#[derive(Debug)]
+pub struct Forbidden;
+impl warp::reject::Reject for Forbidden {}

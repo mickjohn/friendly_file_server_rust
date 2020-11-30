@@ -4,6 +4,8 @@ use std::path::Path;
 use std::collections::HashMap;
 use std::fs;
 
+use crate::webserver::models::{AuthenticatedUser, UserRole};
+
 /*
 Config is loaded from JSON file first, those values are used as defaults for
 the rest of the command line arguments.
@@ -15,7 +17,7 @@ pub struct Config {
     pub ipaddr: [u8; 4],
     pub port: u16,
     pub sharedir: String,
-    pub users: HashMap<String, String>,
+    pub users: HashMap<String, AuthenticatedUser>,
     pub db_url: String,
 }
 
@@ -169,19 +171,32 @@ fn validate_ip_addr(ipaddr: &str) -> Result<[u8; 4], String> {
     Ok(octet_array)
 }
 
-fn load_users_from_str(contents: &str) -> Result<HashMap<String, String>, String> {
+fn load_users_from_str(contents: &str) -> Result<HashMap<String, AuthenticatedUser>, String> {
     let mut users = HashMap::new();
     for line in contents.split("\n") {
         let line = line.trim();
         if !line.starts_with(";") && line != "" {
             let parts: Vec<&str> = line.split(" ").collect();
-            if parts.len() != 2 {
+            if !(parts.len() == 2 || parts.len() == 3) {
                 return Err(String::from("Error reading credentials file."));
             }
 
             let username = parts[0].trim().to_owned();
             let password = parts[1].trim().to_owned();
-            users.insert(username, password);
+            let role = parts.get(2).map(|r| match r.trim() {
+                "ReadOnly" => UserRole::ReadOnly,
+                "Uploader" => UserRole::Uploader,
+                "Admin" => UserRole::Admin,
+                _ => UserRole::ReadOnly,
+            }).unwrap_or(UserRole::ReadOnly);
+
+            let user = AuthenticatedUser { 
+                username: username.clone(),
+                role,
+                password 
+            };
+
+            users.insert(username, user);
         }
     }
     Ok(users)
@@ -206,19 +221,33 @@ mod tests {
     }
 
     #[test]
-    fn test_load_users_from_str() {
+    fn test_load_users_from_str1() {
         let good_str  = concat!(
             "; Users file\n",
             "username1 pass1\n",
             "username2 pass2\n",
+            "username3 pass3 ReadOnly\n",
+            "username4 pass4 Admin\n",
+            "username5 pass5 Uploader\n",
+            "username6 pass6 QwErTy\n",
         );
 
         let mut expected_usernames = HashMap::new();
-        expected_usernames.insert(String::from("username1"), String::from("pass1"));
-        expected_usernames.insert(String::from("username2"), String::from("pass2"));
+        let users = vec![
+            AuthenticatedUser::new(String::from("username1"), String::from("pass1"), UserRole::ReadOnly),
+            AuthenticatedUser::new(String::from("username2"), String::from("pass2"), UserRole::ReadOnly),
+            AuthenticatedUser::new(String::from("username3"), String::from("pass3"), UserRole::ReadOnly),
+            AuthenticatedUser::new(String::from("username4"), String::from("pass4"), UserRole::Admin),
+            AuthenticatedUser::new(String::from("username5"), String::from("pass5"), UserRole::Uploader),
+            AuthenticatedUser::new(String::from("username6"), String::from("pass6"), UserRole::ReadOnly),
+        ];
+        for user in users {
+            expected_usernames.insert(user.username.clone(), user.clone());
+        }
+
         assert_eq!(load_users_from_str(good_str), Ok(expected_usernames));
 
-        let bad_str = "; Users file\nuser space pass";
+        let bad_str = "; Users file\nuser space pass rubbish";
         assert_eq!(load_users_from_str(bad_str), Err(String::from("Error reading credentials file.")));
     }
 
