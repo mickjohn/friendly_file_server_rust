@@ -144,7 +144,8 @@ pub fn load_config() -> Result<Config, String> {
 
     // Merge the values from the json conf and CLI arg
     let ipaddr_str = cli_conf.ipaddr.or(json_config.ipaddr).ok_or("Please specify IP address.")?;
-    let db_url = cli_conf.db_url.or(json_config.db_url).ok_or("Please specify DB url")?;
+    // let db_url = cli_conf.db_url.or(json_config.db_url).ok_or("Please specify DB url")?;
+    let db_url = String::new();
     let port = cli_conf.port.or(json_config.port).ok_or("Please specify port.")?;
     let sharedir = cli_conf.sharedir.or(json_config.sharedir).ok_or("Please specify Share Dir.")?;
     let users_file = cli_conf.users_file.or(json_config.users_file).ok_or("Please specpfy Users File.")?;
