@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::env;
 use std::path::PathBuf;
+use std::collections::HashMap;
+
 use warp::Filter;
 use warp::http::header::{HeaderMap, HeaderValue};
 use argon2::{self, Config};
@@ -63,6 +65,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // The 'cinema' page, i.e. where users can 
     let cinema = filters::render_cinema_page(sp.clone(), hba.clone() , users.clone());
     let listing = filters::render_file_listing(sp, hba, users.clone());
+    let login = warp::path!("login").and(warp::get()).and(warp::fs::file("static/login.html"));
+
+    let login_post = warp::path!("login")
+        .and(warp::post())
+        .and(warp::body::content_length_limit(1024 * 32))
+        .and(warp::body::form())
+        .map(|simple_map: HashMap<String, String>| {
+            debug!("{:?}", simple_map);
+            "Got a urlencoded body!"
+        });
+
     let static_files = warp::path("static")
                         .and(filters::auth(users.clone()))
                         .and(warp::fs::dir("static"))
@@ -115,6 +128,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                    .or(static_files.recover(filters::recover_auth))
                    .or(wwf_redirect.recover(filters::recover_auth))
                 //    .or(api_routes.recover(filters::recover_auth))
+                   .or(login)
+                   .or(login_post)
                    .or(websocket)
                    .or(redirect);
 

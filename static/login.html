@@ -1,0 +1,29 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <meta name="description" content="Friendly File Sharer">
+    <!-- <link rel="stylesheet" type="text/css" href="/static/listing.css"> -->
+</head>
+
+<body>
+    <header>
+        <a href="/browse/">
+            <h2>Mickjohn.com</h2>
+        </a>
+    </header>
+    <div class="content">
+        <form action="/login" method="post">
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text"/>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password"/>
+            <input type="submit" value="Login"/>
+        </form>
+    </div>
+</body>
+</html>

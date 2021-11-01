@@ -6,6 +6,7 @@ use rand::rngs::SmallRng;
 use super::messages::{Messages, StatsStruct};
 use serde_json;
 use tokio::sync::mpsc;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio::time;
 use futures::future::{Abortable, AbortHandle};
 
@@ -20,6 +21,7 @@ pub async fn user_connected(ws: WebSocket, code: String, rooms_arc: Rooms, clean
     // Use an unbounded channel to handle buffering and flushing of messages
     // to the websocket...
     let (tx, rx) = mpsc::unbounded_channel();
+    let rx = UnboundedReceiverStream::new(rx);
     tokio::task::spawn(rx.forward(user_ws_tx).map(|result| {
         if let Err(e) = result {
             warn!("websocket send error: {}", e);
@@ -102,7 +104,7 @@ pub async fn delete_from_rooms(rooms: Rooms, cleaner: RoomCleaner, code: String)
         cleaner.insert(code.clone(), abort_handle);
     }
     let future = Abortable::new(async { 
-        time::delay_for(time::Duration::from_secs(ROOM_DELETION_TIMEOUT)).await;
+        time::sleep(time::Duration::from_secs(ROOM_DELETION_TIMEOUT)).await;
         info!("Room {} has been empty for {}s, deleting it", code, ROOM_DELETION_TIMEOUT);
         let mut rooms = rooms.lock().await;
 

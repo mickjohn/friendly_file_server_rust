@@ -180,7 +180,6 @@ pub fn auth_restricted(users: UserMap, role: UserRole) -> impl Filter<Extract = 
                     return Err(warp::reject::custom(rejections::Forbidden));
                 }
             }
-
             Err(warp::reject::custom(rejections::InvalidCredentials))
         })
 }
