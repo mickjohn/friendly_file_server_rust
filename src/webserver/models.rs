@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::collections::HashMap;
 use tokio::sync::{mpsc, Mutex};
-use tokio_postgres::Client;
+// use tokio_postgres::Client;
 use std::path::PathBuf;
 use handlebars::Handlebars;
 use warp::ws::Message;
@@ -27,6 +27,7 @@ pub struct AuthenticatedUser {
 }
 
 impl AuthenticatedUser {
+    #[cfg(test)]
     pub fn new(username: String, password: String, role: UserRole) -> Self {
         AuthenticatedUser { username, role, password }
     }
@@ -56,7 +57,7 @@ pub type Rooms = Arc<Mutex<HashMap<String, Room>>>;
 pub type RoomCleaner = Arc<Mutex<HashMap<String, AbortHandle>>>;
 pub type Urls = Arc<Mutex<HashMap<String, String>>>;
 // pub type CatalogueArc = Arc<Mutex<Catalogue>>;
-pub type DbClientArc= Arc<Mutex<Client>>;
+// pub type DbClientArc= Arc<Mutex<Client>>;
 
 // For websockets
 pub struct Room {
@@ -153,9 +154,9 @@ pub fn new_room_cleaner() -> RoomCleaner {
 //     Arc::new(Mutex::new(catalogue))
 // }
 
-pub fn new_db_client(client: Client) -> DbClientArc {
-    Arc::new(Mutex::new(client))
-}
+// pub fn new_db_client(client: Client) -> DbClientArc {
+//     Arc::new(Mutex::new(client))
+// }
 
 #[cfg(test)]
 mod tests {

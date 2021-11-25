@@ -1,4 +1,4 @@
-FROM rust:1-alpine3.12 as builder
+FROM rust:1-alpine1.56.1 as builder
 WORKDIR /app
 COPY . /app
 RUN apk add --no-cache musl-dev && cargo build --release

@@ -9,7 +9,7 @@ use super::models::{Sp,
     UrlQuery,
     RoomCodeQuery,
     RoomCleaner,
-    DbClientArc,
+    // DbClientArc,
     AuthenticatedUser,
     UserRole,
 };
@@ -101,17 +101,17 @@ pub fn wwf_redirect(
         .and_then(handlers::wwf_lookup_redirect)
 }
 
-pub fn get_catalogue(
-    users: UserMap,
-    client: DbClientArc,
-) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
-    warp::get()
-        .and(warp::path("catalogue"))
-        .and(warp::path::end())
-        .and(auth(users))
-        .and(with_db_client(client))
-        .and_then(handlers::get_catalogue)
-}
+// pub fn get_catalogue(
+//     users: UserMap,
+//     client: DbClientArc,
+// ) -> impl Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone {
+//     warp::get()
+//         .and(warp::path("catalogue"))
+//         .and(warp::path::end())
+//         .and(auth(users))
+//         .and(with_db_client(client))
+//         .and_then(handlers::get_catalogue)
+// }
 
 fn with_sp(sp: Sp) -> impl Filter<Extract = (Sp,), Error = std::convert::Infallible> + Clone {
     warp::any().map(move || sp.clone())
@@ -137,9 +137,9 @@ fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert:
     warp::any().map(move || urls.clone())
 }
 
-fn with_db_client(client: DbClientArc) -> impl Filter<Extract = (DbClientArc,), Error = std::convert::Infallible> + Clone {
-    warp::any().map(move || client.clone())
-}
+// fn with_db_client(client: DbClientArc) -> impl Filter<Extract = (DbClientArc,), Error = std::convert::Infallible> + Clone {
+//     warp::any().map(move || client.clone())
+// }
 
 async fn check_auth(header: &str, users: &UserMap) -> Option<AuthenticatedUser> {
     let (u,p) = parse_auth_header(header);

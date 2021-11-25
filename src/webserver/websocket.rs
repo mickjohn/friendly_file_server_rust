@@ -41,7 +41,7 @@ pub async fn user_connected(ws: WebSocket, code: String, rooms_arc: Rooms, clean
             info!("User rejoining cold room {}, scheduled deletion cleared", code);
             let abort_handle = &cleaner_mtx[&code];
             abort_handle.abort();
-            &mut cleaner_mtx.remove(&code);
+            let _ = &mut cleaner_mtx.remove(&code);
         }
         let room: &mut Room = rooms.get_mut(&code).unwrap();
         room.add_user(my_id, user.clone());

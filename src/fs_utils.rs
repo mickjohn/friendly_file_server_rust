@@ -42,7 +42,7 @@ impl ServePoint {
         match p.canonicalize() {
             Ok(root_path) => {
                 if !p.exists() || !p.is_dir() {
-                    panic!(format!("{:?} does not exist or is not a directory", p));
+                    panic!("{:?} does not exist or is not a directory", p);
                 }
 
                 return Self {

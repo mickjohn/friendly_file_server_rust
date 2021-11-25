@@ -19,6 +19,8 @@ pub struct Config {
     pub sharedir: String,
     pub users: HashMap<String, AuthenticatedUser>,
     pub db_url: String,
+    pub check_password: bool,
+    pub encrypt_password: bool,
 }
 
 #[derive(Deserialize, Debug)]
@@ -50,6 +52,8 @@ struct CliConfig {
     pub users_file: Option<String>,
     pub config_file: Option<String>,
     pub db_url: Option<String>,
+    pub check_password: bool,
+    pub encrypt_password: bool,
 }
 
 fn parse_args<'a>() -> ArgMatches<'a> {
@@ -88,6 +92,16 @@ fn parse_args<'a>() -> ArgMatches<'a> {
         .help("path to config file")
         .required(false)
         .takes_value(true))
+    .arg(Arg::with_name("encrypt_password")
+        .long("encrypt_password")
+        .help("Use this to encrypt a password and see the ciphertext")
+        .required(false)
+        .takes_value(false))
+    .arg(Arg::with_name("check_password")
+        .long("check_password")
+        .help("Use this to verify a password against it's hash")
+        .required(false)
+        .takes_value(false))
     .get_matches()
 }
 
@@ -126,6 +140,8 @@ fn parse_config_from_args() -> Result<CliConfig, String> {
         users_file: credsfile,
         config_file: config_file,
         db_url: db_url,
+        encrypt_password: matches.is_present("encrypt_password"),
+        check_password: matches.is_present("check_password"),
     })
 }
 
@@ -142,6 +158,21 @@ pub fn load_config() -> Result<Config, String> {
         debug!("JSON config = {:?}", json_config);
     }
 
+    // If we are just checking password then default everything and return
+    // a useless config. The app will be exiting once it checks or encrypts the
+    // passwords.
+    if cli_conf.check_password | cli_conf.encrypt_password {
+        return Ok(Config {
+            ipaddr: [0,0,0,0],
+            port: 0,
+            sharedir: String::from(""),
+            users: HashMap::new(),
+            db_url: String::from(""),
+            check_password: cli_conf.check_password,
+            encrypt_password: cli_conf.encrypt_password,
+        })
+    }
+
     // Merge the values from the json conf and CLI arg
     let ipaddr_str = cli_conf.ipaddr.or(json_config.ipaddr).ok_or("Please specify IP address.")?;
     // let db_url = cli_conf.db_url.or(json_config.db_url).ok_or("Please specify DB url")?;
@@ -155,7 +186,7 @@ pub fn load_config() -> Result<Config, String> {
     let users = load_users_from_str(&users_file_contents)?;
     let ipaddr = validate_ip_addr(&ipaddr_str)?;
 
-    Ok(Config { ipaddr, port, sharedir, users, db_url, })
+    Ok(Config { ipaddr, port, sharedir, users, db_url, check_password: cli_conf.check_password, encrypt_password: cli_conf.encrypt_password })
 }
 
 fn validate_ip_addr(ipaddr: &str) -> Result<[u8; 4], String> {

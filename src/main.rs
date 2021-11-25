@@ -3,11 +3,14 @@ use std::env;
 use std::path::PathBuf;
 use warp::Filter;
 use warp::http::header::{HeaderMap, HeaderValue};
-use argon2::{self, Config};
-use rand::Rng;
+use argon2::{
+    password_hash::{
+        rand_core::OsRng,
+        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
+    },
+    Argon2
+};
 use warp::http::Uri;
-use tokio_postgres;
-use tokio_postgres::{NoTls};
 
 #[macro_use]
 extern crate lazy_static;
@@ -19,8 +22,8 @@ mod fs_utils;
 mod hb_helpers;
 mod args;
 mod webserver;
-mod db;
-mod db_models;
+// mod db;
+// mod db_models;
 
 use crate::webserver::{models, filters, websocket};
 
@@ -33,6 +36,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     info!("Initialising");
 
     let config = args::load_config()?;
+
+    if config.check_password {
+        check_password();
+        return Ok(());
+    }
+
+    if config.encrypt_password {
+        encrypt_password();
+        return Ok(());
+    }
+
     let root_path = PathBuf::from(&config.sharedir);
 
     let mut headers = HeaderMap::new();
@@ -131,11 +145,41 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 pub fn hash(password: &[u8]) -> String {
-    let salt = rand::thread_rng().gen::<[u8; 32]>();
-    let config = Config::default();
-    argon2::hash_encoded(password, &salt, &config).unwrap()
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    argon2.hash_password(password, &salt).unwrap().to_string()
 }
 
 pub fn verify(hash: &str, password: &[u8]) -> bool {
-    argon2::verify_encoded(hash, password).unwrap_or(false)
+    let parsed_hash = PasswordHash::new(hash).unwrap();
+    let argon2 = Argon2::default();
+    argon2.verify_password(password, &parsed_hash).is_ok()
+}
+
+pub fn check_password() {
+    use std::io::stdin;
+    println!("Password Verifier.");
+    println!("Enter ciphertext and plaintext separated by a space");
+    let mut s = String::new();
+    stdin().read_line(&mut s).expect("Did not enter a correct string");
+    let strings: Vec<&str> = s.trim().split(" ").into_iter().collect();
+    if strings.len() != 2 {
+        panic!("Expected two words separated by spaces. Got {}", strings.len())
+    }
+    let ciphertext = strings[0];
+    let plaintext = strings[1];
+    println!("ciphertext = {}\nplaintext = {}", ciphertext, plaintext);
+    println!("Is valid = {}", verify(ciphertext, plaintext.as_bytes()))
+}
+
+pub fn encrypt_password() {
+    use std::io::stdin;
+    println!("Password Encrypter.");
+    println!("Enter plaintext. Spaces will be trimmed");
+    let mut s = String::new();
+    stdin().read_line(&mut s).expect("Did not enter a correct string");
+    let password = s.trim();
+    println!("Password = '{}'", password);
+    let ciphertext = hash(password.as_bytes());
+    println!("Ciphertext = '{}'", ciphertext)
 }
