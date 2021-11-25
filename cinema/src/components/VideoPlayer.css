@@ -17,7 +17,7 @@
 }
 
 .video-and-controls {
-    display: inline-block;
+    display: flex;
     position: relative;
 }
 

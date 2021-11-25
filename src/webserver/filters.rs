@@ -39,7 +39,8 @@ pub fn render_file_listing<'a>(
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone + 'a {
     warp::path!("browse" / ..)
         .and(warp::get())
-        .and(auth_restricted(users, UserRole::Admin))
+        // .and(auth_restricted(users, UserRole::Admin))
+        .and(auth(users))
         .and(with_sp(sp))
         .and(with_hba(hba))
         .and(warp::path::full())
@@ -143,6 +144,7 @@ fn with_urls(urls: Urls) -> impl Filter<Extract = (Urls,), Error = std::convert:
 
 async fn check_auth(header: &str, users: &UserMap) -> Option<AuthenticatedUser> {
     let (u,p) = parse_auth_header(header);
+    debug!("Verifying password for user {}", u);
     let users =  users.lock().await;
 
     if let Some(user) = users.get(&u) {
@@ -168,22 +170,22 @@ pub fn auth(users: UserMap) -> impl Filter<Extract = (Authenticated,), Error = w
 
 /// Requires that the user had the AT LEAST the role that is provided to this
 /// function in order to access the resource.
-pub fn auth_restricted(users: UserMap, role: UserRole) -> impl Filter<Extract = (Authenticated,), Error = warp::Rejection> + Clone {
-    warp::header::<String>("Authorization")
-        .and(with_users_map(users))
-        .and_then(move |header: String, users: UserMap| async move {
-            let user_opt = check_auth(&header, &users).await;
-            if let Some(user) = user_opt {
-                if user.role >= role {
-                    return Ok(Authenticated);
-                } else {
-                    return Err(warp::reject::custom(rejections::Forbidden));
-                }
-            }
+// pub fn auth_restricted(users: UserMap, role: UserRole) -> impl Filter<Extract = (Authenticated,), Error = warp::Rejection> + Clone {
+//     warp::header::<String>("Authorization")
+//         .and(with_users_map(users))
+//         .and_then(move |header: String, users: UserMap| async move {
+//             let user_opt = check_auth(&header, &users).await;
+//             if let Some(user) = user_opt {
+//                 if user.role >= role {
+//                     return Ok(Authenticated);
+//                 } else {
+//                     return Err(warp::reject::custom(rejections::Forbidden));
+//                 }
+//             }
 
-            Err(warp::reject::custom(rejections::InvalidCredentials))
-        })
-}
+//             Err(warp::reject::custom(rejections::InvalidCredentials))
+//         })
+// }
 
 fn parse_auth_header(header: &str) -> (String, String) {
     let header_parts: Vec<&str> = header.split(" ").collect();
