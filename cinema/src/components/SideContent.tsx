@@ -135,9 +135,11 @@ export default (props: Props) => {
     async function playHideSequence() {
         await animation.start({ opacity: 0, transition: { duration: 0.5 } });
         await animation.start({ width: 0 });
+        await animation.start({ display: "none" });
     }
 
     async function playShowSequence() {
+        await animation.start({ display: "block" });
         await animation.start({ width: 300 });
         await animation.start({ opacity: 1, transition: { duration: 0.5 } });
     }

@@ -134,6 +134,10 @@ class VideoPlayer extends React.Component<Props, State> {
     }
 
     onPlayClicked() {
+
+        // Begin the hide-controls timeout
+        this.hideControlsInFullscreen();
+
         // If a handler was supplied then use it.
         // Otherwise just call the play function on the HTMLVideo ref
         if (this.props.onPlay !== undefined) {
@@ -144,6 +148,14 @@ class VideoPlayer extends React.Component<Props, State> {
     }
 
     onPauseClicked() {
+        // Show the controls when video is paused
+        this.setState({showControls: true});
+
+        // Remove the hideControlsTimout when the video is paused
+        if (this.hideControlsTimeout !== undefined) {
+            clearTimeout(this.hideControlsTimeout)
+        }
+
         // If a handler was supplied then use it.
         // Otherwise just call the play function on the HTMLVideo ref
         if (this.props.onPause !== undefined) {
@@ -245,6 +257,7 @@ class VideoPlayer extends React.Component<Props, State> {
         );
     }
 
+    // Show the controls and then hide them after some time has elapsed.
     hideControlsInFullscreen() {
         if (this.state.fullscreen) {
             // If a timeout is already set, clear it
@@ -256,7 +269,7 @@ class VideoPlayer extends React.Component<Props, State> {
 
             // Create a timeout to hide the controls
             // The timout is cancelled if this funtion is called again
-            if (!this.mouseOverControls && this.state.playing) {
+            if (this.state.playing) {
                 this.hideControlsTimeout = window.setTimeout(() => {
                     console.debug("timeout called, hiding controls");
                     this.setState({showControls: false});
@@ -351,8 +364,10 @@ class VideoPlayer extends React.Component<Props, State> {
         /* Check if the subtitles exist */
         const subtitlesUrl = this.props.source.replace(/\.mp4$/, '.vtt');
         UrlExists(subtitlesUrl, (exists: boolean) => {
+            console.info(`Checking for subtitles file at ${subtitlesUrl}`)
             if (exists) {
                 this.setState({ haveSubtitles: true })
+                console.info("Subtitles file found");
             } else {
                 console.error("Subtitles file not found");
             }
@@ -427,7 +442,7 @@ class VideoPlayer extends React.Component<Props, State> {
                         <video
                             ref={this.videoRef}
                             preload="metadata"
-                            onClick={() => this.togglePlayback()} >
+                            onClick={() => this.togglePlayback() } >
                             <source src={this.props.source} type="video/mp4" />
                             {track}
                             Your browser does not support HTML video.

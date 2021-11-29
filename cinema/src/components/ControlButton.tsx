@@ -60,7 +60,7 @@ const btnConfig: BtnConfig = {
 const ControlButton = (props: Props) => {
     const conf = btnConfig[props.type];
     return (
-        <motion.button className="ControlButton" onClick={props.onClick} whileHover={{ scale: 1.2 }} >
+        <motion.button className="ControlButton" onClick={props.onClick} >
             <img alt={conf.alt} src={conf.src} />
         </motion.button>
     );

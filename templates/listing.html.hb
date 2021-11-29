@@ -26,9 +26,9 @@
 
     <table>
       <tr>
-        <th colspan="2"> Name </th>
-        <th> Modified </th>
-        <th> Size </th>
+        <th class="file-name" colspan="2"> Name </th>
+        <th class="file-mtime"> Modified </th>
+        <th class="file-size"> Size </th>
       </tr>
 
       {{#each listing.children as | child |}}
@@ -40,7 +40,7 @@
         <td align="center"> <img src="/static/icons/{{ icon_for_ext child.name }}" alt="icon" height="35"> </td>
         {{/if }}
 
-        <td>
+        <td class="file-name">
           {{#if child.is_dir }}
           <a href="/browse{{@root.listing.path}}{{urlencode child.name}}">
             {{ child.name }}
@@ -56,14 +56,21 @@
             (click here to stream)
           </a>
           {{/if }}
+
+          <div class="small-screen-only">
+            <span class="small-file-mtime"><b>Modified:</b> <i>{{ child.mtime }}</i></span>
+            {{#unless child.is_dir }}
+            <span class="small-file-size"><b>Size: {{ child.size }}</b></span>
+            {{/unless }}
+          </div>
         </td>
 
-        <td> {{ child.mtime }} </td>
+        <td class="file-mtime"> {{ child.mtime }} </td>
 
         {{#if child.is_dir }}
-        <td> - </td>
+        <td class="file-size"> - </td>
         {{ else }}
-        <td> {{ child.size }} </td>
+        <td class="file-size"> {{ child.size }} </td>
         {{/if }}
 
       </tr>

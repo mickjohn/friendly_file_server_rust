@@ -1,13 +1,17 @@
 .ControlButton {
     background: transparent;
-    width: 30px;
-    height: 30px;
+    width: 23px;
+    height: 23px;
     padding: 0;
     border: 0;
     cursor: pointer;
 }
 
 .ControlButton img {
-    width: 30px;
-    height: 30px;
+    width: 23px;
+    height: 23px;
+}
+
+.ControlButton:hover {
+    filter: invert(48%) sepia(79%) saturate(2476%) hue-rotate(180deg);
 }

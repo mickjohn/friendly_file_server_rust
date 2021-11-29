@@ -63,7 +63,6 @@ fn parse_args<'a>() -> ArgMatches<'a> {
     .arg(Arg::with_name("ipaddr")
          .long("ipaddr")
          .help("IP address to bind to")
-         .default_value("127.0.0.1")
          .required(false)
          .takes_value(true))
     .arg(Arg::with_name("port")
